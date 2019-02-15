@@ -1,0 +1,6 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WplusH_HToCC_WToLNu_M125_13TeV_powheg_pythia8/lmastrol-NanoProd_v4-2fc0529a080/181118_094952/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WplusH_HToCC_WToLNu_M125_13TeV_powheg_pythia8/lmastrol-NanoProd_v4-2fc0529a080/181118_094952/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WplusH_HToCC_WToLNu_M125_13TeV_powheg_pythia8/lmastrol-NanoProd_v4-2fc0529a080/181118_094952/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WplusH_HToCC_WToLNu_M125_13TeV_powheg_pythia8/lmastrol-NanoProd_v4-2fc0529a080/181118_094952/0000/tree_4.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WplusH_HToCC_WToLNu_M125_13TeV_powheg_pythia8/lmastrol-NanoProd_v4-2fc0529a080/181118_094952/0000/tree_5.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WplusH_HToCC_WToLNu_M125_13TeV_powheg_pythia8/lmastrol-NanoProd_v4-2fc0529a080/181118_094952/0000/tree_6.root

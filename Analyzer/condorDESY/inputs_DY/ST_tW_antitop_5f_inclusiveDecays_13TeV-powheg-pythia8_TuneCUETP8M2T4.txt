@@ -1,0 +1,2 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M2T4/arizzi-RunIIMoriond17-DeepAndR142/181118_101540/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M2T4/arizzi-RunIIMoriond17-DeepAndR142/181118_101540/0000/tree_2.root

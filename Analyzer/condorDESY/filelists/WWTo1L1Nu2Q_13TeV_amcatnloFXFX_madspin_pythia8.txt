@@ -1,0 +1,6 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/arizzi-RunIIMoriond17-DeepAndR109/181118_100207/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/arizzi-RunIIMoriond17-DeepAndR109/181118_100207/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/arizzi-RunIIMoriond17-DeepAndR109/181118_100207/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/arizzi-RunIIMoriond17-DeepAndR109/181118_100207/0000/tree_4.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/arizzi-RunIIMoriond17-DeepAndR109/181118_100207/0000/tree_5.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo1L1Nu2Q_13TeV_amcatnloFXFX_madspin_pythia8/arizzi-RunIIMoriond17-DeepAndR109/181118_100207/0000/tree_6.root

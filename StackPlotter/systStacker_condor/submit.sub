@@ -1,0 +1,16 @@
+universe = vanilla
+Executable = condor_runscript.sh
+Output = condor/log-$(ClusterId).$(ProcId).out
+Error  = condor/log-$(ClusterId).$(ProcId).err
+Log    = condor/log-$(ClusterId).$(ProcId).log
+
+arguments    = $(ClusterId) $(ProcId)
+
+Notification = never
+on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
+
++RequestRuntime = 7200
+
+queue CMD from cmdList.txt
+
+

@@ -1,0 +1,4 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WZ_TuneCUETP8M1_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR103/181118_095936/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WZ_TuneCUETP8M1_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR103/181118_095936/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WZ_TuneCUETP8M1_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR103/181118_095936/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WZ_TuneCUETP8M1_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR104/181118_100000/0000/tree_1.root
