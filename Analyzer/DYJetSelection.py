@@ -801,15 +801,15 @@ for entry in inputTree:
     # =========================== Select Leptons ===============================
     if debug == True:
         print "Preselection 1 : Single Lepton"
-        print "                 electron selection : pt > 30 and eta<2.5"
+        print "                 electron selection : pt > 20 and eta<2.5"
         print "                 electron selection : Electron_mvaSpring16GP_WP80 > 0 "                # cutBased >= 3 (Medium)"
         # print "                 electron selection : Electron_pfRelIso03_all <= 0.15"
-        print "                 muon selection : pt > 30 and eta<2.4"
+        print "                 muon selection : pt > 12 and eta<2.4"
         print "                 muon selection : Muon_tightId > 0"
         print "                 muon selection : Muon_pfRelIso04_all <= 0.15"
 
     for i in range(0, len(entry.Electron_pt)):
-        if entry.Electron_pt[i]<30 or abs(entry.Electron_eta[i])>2.5: continue
+        if entry.Electron_pt[i]<15 or abs(entry.Electron_eta[i])>2.5: continue
         if abs(entry.Electron_eta[i]) > 1.442 and abs(entry.Electron_eta[i]) < 1.556: continue
         if entry.Electron_mvaSpring16GP_WP80[i]<=0: continue
         # if entry.Electron_cutBased[i]<3: continue
@@ -831,7 +831,7 @@ for entry in inputTree:
             hardE_Jet_PtRatio[0] = entry.Electron_pt[i]/jetPt[hardE_jetidx]
 
     for i in range(0, len(entry.Muon_pt)):
-        if entry.Muon_pt[i]<30 or abs(entry.Muon_eta[i])>2.4: continue
+        if entry.Muon_pt[i]<12 or abs(entry.Muon_eta[i])>2.4: continue
         if entry.Muon_tightId[i]<=0: continue
         if entry.Muon_pfRelIso04_all[i]>0.15: continue
         m_Pt_List.append(entry.Muon_pt[i])
@@ -853,6 +853,7 @@ for entry in inputTree:
 
     # ======================= At least 2 u+u- cut ===========================
     if len(m_Pt_List) < 2: continue
+    if max(m_Pt_List) < 20.: continue
 
     # if len(e_Pt_List) == 1:
     #     isMuon = False
@@ -1499,13 +1500,13 @@ for entry in inputTree:
         for i in range(len(m_Pt_List)):
             xbin = MuID2016BFhisto2d.GetXaxis().FindBin(m_Eta_List[i])
             ybin = MuID2016BFhisto2d.GetYaxis().FindBin(m_Pt_List[i])
-            MuIDBF = MuID2016BFhisto2d.GetBinContent(xbin,min(6,ybin))
-            MuIDBF_err = MuID2016BFhisto2d.GetBinError(xbin,min(6,ybin))
+            MuIDBF = MuID2016BFhisto2d.GetBinContent(xbin,max(1,min(6,ybin)))
+            MuIDBF_err = MuID2016BFhisto2d.GetBinError(xbin,max(1,min(6,ybin)))
 
             xbin = MuID2016GHhisto2d.GetXaxis().FindBin(m_Eta_List[i])
             ybin = MuID2016GHhisto2d.GetYaxis().FindBin(m_Pt_List[i])
-            MuIDGH = MuID2016GHhisto2d.GetBinContent(xbin,min(6,ybin))
-            MuIDGH_err = MuID2016GHhisto2d.GetBinError(xbin,min(6,ybin))
+            MuIDGH = MuID2016GHhisto2d.GetBinContent(xbin,max(1,min(6,ybin)))
+            MuIDGH_err = MuID2016GHhisto2d.GetBinError(xbin,max(1,min(6,ybin)))
 
             MuIDSF[0] *= 0.55*MuIDBF + 0.45*MuIDGH
 

@@ -29,9 +29,8 @@ debug = False
 isNano = True
 
 parentDir = 'VHcc_2016V4bis_Nov18/'
-if "spmondal" in fullName and fullName.startswith('/pnfs/'):
+if fullName.startswith('/pnfs/'):
     pref = ""
-#    parentDir = 'VHbbPostNano2016_V5_CtagSF/'
     parentDir = fullName.split('/')[8]+"/"
     isNano = False
 if fullName.startswith('/store/'):
@@ -214,7 +213,6 @@ Z_Eta            = array('d',[0])
 Z_Phi            = array('d',[0])
 
 Z2_Mass           = array('d',[0])
-Z3_Mass           = array('d',[0])
 
 Z_Mass_best      = array('d',[0])
 dR_mu_mu_best    = array('d',[0])
@@ -430,7 +428,6 @@ outputTree.Branch('Z_Eta'            ,Z_Eta           ,'Z_Eta/D'     )
 outputTree.Branch('Z_Phi'            ,Z_Phi           ,'Z_Phi/D'     )
 
 outputTree.Branch('Z2_Mass'           ,Z2_Mass          ,'Z2_Mass/D'     )
-outputTree.Branch('Z3_Mass'           ,Z3_Mass          ,'Z3_Mass/D'     )
 
 outputTree.Branch('Z_Mass_best'      ,Z_Mass_best     ,'Z_Mass_best/D'     )
 outputTree.Branch('dR_mu_mu_best'    ,dR_mu_mu_best   ,'dR_mu_mu_best/D'     )
@@ -647,7 +644,6 @@ for entry in inputTree:
     Z_Phi[0]            = -1000
 
     Z2_Mass[0]           = -1000
-    Z3_Mass[0]           = -1000
 
     Z_Mass_best[0]      = -1000
     dR_mu_mu_best[0]    = -1000
@@ -816,17 +812,16 @@ for entry in inputTree:
         exec("metPhi = entry.MET_phi_"+JECName)
 
     # =========================== Select Leptons ===============================
-    if debug == True:
-        print "Preselection 1 : 1e, 1mu"
-        print "                 electron selection : pt > 30 and eta<2.5"
+    if debug == True:        
+        print "                 electron selection : pt > 15 and eta<2.5"
         print "                 electron selection : Electron_mvaSpring16GP_WP80 > 0 "                # cutBased >= 3 (Medium)"
         # print "                 electron selection : Electron_pfRelIso03_all <= 0.15"
-        print "                 muon selection : pt > 30 and eta<2.4"
+        print "                 muon selection : pt > 10 and eta<2.4"
         print "                 muon selection : Muon_tightId > 0"
         print "                 muon selection : Muon_pfRelIso04_all <= 0.15"
 
     for i in range(0, len(entry.Electron_pt)):
-        if entry.Electron_pt[i]<30 or abs(entry.Electron_eta[i])>2.5: continue
+        if entry.Electron_pt[i]<15 or abs(entry.Electron_eta[i])>2.5: continue
         if abs(entry.Electron_eta[i]) > 1.442 and abs(entry.Electron_eta[i]) < 1.556: continue
         if entry.Electron_mvaSpring16GP_WP80[i]<=0: continue
         # if entry.Electron_cutBased[i]<3: continue
@@ -848,7 +843,7 @@ for entry in inputTree:
             hardE_Jet_PtRatio[0] = entry.Electron_pt[i]/jetPt[hardE_jetidx]
 
     for i in range(0, len(entry.Muon_pt)):
-        if entry.Muon_pt[i]<30 or abs(entry.Muon_eta[i])>2.4: continue
+        if entry.Muon_pt[i]<12 or abs(entry.Muon_eta[i])>2.4: continue
         if entry.Muon_tightId[i]<=0: continue
         if entry.Muon_pfRelIso04_all[i]>0.15: continue
         m_Pt_List.append(entry.Muon_pt[i])
@@ -870,8 +865,12 @@ for entry in inputTree:
 
     # =======================  1 e+- 1 mu-+ cut ===========================
     if len(m_Pt_List) == 1 and len(e_Pt_List) == 1:
-        is_ME[0] = 1
+        if m_Pt_List[0] < 25. and e_Pt_List[0] < 27.: continue
+        if m_Pt_List[0] < 14.: continue
         if e_Charge_List[0]*m_Charge_List[0] > 0 : continue
+        
+        is_ME[0] = 1
+        
         mu = TLorentzVector()
         e = TLorentzVector()
         mu.SetPtEtaPhiM(m_Pt_List[0],m_Eta_List[0],m_Phi_List[0],m_Mass_List[0])
@@ -879,8 +878,10 @@ for entry in inputTree:
         Z_cand = mu + e
 
     elif len(m_Pt_List) == 2 and len(e_Pt_List) == 0:
-        is_MM[0] = 1
+        if max(m_Pt_List) < 20.: continue
         if m_Charge_List[0]*m_Charge_List[1] > 0 : continue
+        
+        is_MM[0] = 1
         mu1 = TLorentzVector()
         mu2 = TLorentzVector()
         mu1.SetPtEtaPhiM(m_Pt_List[0],m_Eta_List[0],m_Phi_List[0],m_Mass_List[0])
@@ -889,8 +890,10 @@ for entry in inputTree:
         if (Z_cand.M() > 81. and Z_cand.M() < 101.) or Z_cand.M() < 12.: continue
 
     elif len(m_Pt_List) == 0 and len(e_Pt_List) == 2:
-        is_EE[0] = 1
+        if max(e_Pt_List) < 27.: continue
         if e_Charge_List[0]*e_Charge_List[1] > 0 : continue
+        
+        is_EE[0] = 1        
         e1 = TLorentzVector()
         e2 = TLorentzVector()
         e1.SetPtEtaPhiM(e_Pt_List[0],e_Eta_List[0],e_Phi_List[0],e_Mass_List[0])
@@ -900,7 +903,7 @@ for entry in inputTree:
     else:
         continue
 
-    # NOTE: This is not a real Z, it's just named Z for ease of implementation
+    # NOTE: This is not necessarily a real Z, it's just named Z for ease of implementation
     Z_Mass[0] = Z_cand.M()
     Z_Eta[0] = Z_cand.Eta()
     Z_Phi[0] = Z_cand.Phi()
@@ -925,7 +928,6 @@ for entry in inputTree:
     if debug == True:
         print "                 Jet selection : jet_pt > 20 and jet_eta < 2.4"
         print "                 Jet selection : Jet_jetId >= 3"                 # Tight in 2016
-        print "                 Jet selection : Jet_lepFilter = True"           # or Jet Mu EF < 0.8
         print "                 Jet selection : Jet_puId >= 0"
 
     # # ------------------------ Custom Jet_lepFilter ----------------------------
@@ -1090,8 +1092,8 @@ for entry in inputTree:
         print "Preselection 4 : TRIGGERS"
     if is_ME[0]:
         if "Double" in channel: continue
-        # if ( entry.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL == 0 ) and ( entry.HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL == 0 ): continue
-        if ( entry.HLT_IsoMu24 == 0 ) and ( entry.HLT_IsoTkMu24 == 0 ): continue
+        if ( entry.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL == 0 ) and ( entry.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL == 0 ): continue
+#        if ( entry.HLT_IsoMu24 == 0 ) and ( entry.HLT_IsoTkMu24 == 0 ): continue
     elif is_MM[0]:
         if "DoubleEG" in channel or "MuonEG" in channel: continue
         if ( entry.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL == 0 ) and ( entry.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ == 0 ) \
@@ -1140,8 +1142,13 @@ for entry in inputTree:
 
             # Make Z
             if is_MM[0]:
-                Z2_Mass[0] = (jetMu+mu1).M()
-                Z3_Mass[0] = (jetMu+mu2).M()
+                if jetMu_Charge * m_Charge_List[0] < 0: 
+                    Z2_Mass[0] = (jetMu+mu1).M()
+                else:
+                    Z2_Mass[0] = (jetMu+mu2).M()
+            elif is_ME[0]:
+                if jetMu_Charge * m_Charge_List[0] < 0: 
+                    Z2_Mass[0] = (jetMu+mu).M()
 
     if jetMu_Pt[0] < 0: continue
     # ==========================================================================
@@ -1495,13 +1502,13 @@ for entry in inputTree:
         for i in range(len(m_Pt_List)):
             xbin = MuID2016BFhisto2d.GetXaxis().FindBin(m_Eta_List[i])
             ybin = MuID2016BFhisto2d.GetYaxis().FindBin(m_Pt_List[i])
-            MuIDBF = MuID2016BFhisto2d.GetBinContent(xbin,min(6,ybin))
-            MuIDBF_err = MuID2016BFhisto2d.GetBinError(xbin,min(6,ybin))
+            MuIDBF = MuID2016BFhisto2d.GetBinContent(xbin,max(1,min(6,ybin)))
+            MuIDBF_err = MuID2016BFhisto2d.GetBinError(xbin,max(1,min(6,ybin)))
 
             xbin = MuID2016GHhisto2d.GetXaxis().FindBin(m_Eta_List[i])
             ybin = MuID2016GHhisto2d.GetYaxis().FindBin(m_Pt_List[i])
-            MuIDGH = MuID2016GHhisto2d.GetBinContent(xbin,min(6,ybin))
-            MuIDGH_err = MuID2016GHhisto2d.GetBinError(xbin,min(6,ybin))
+            MuIDGH = MuID2016GHhisto2d.GetBinContent(xbin,max(1,min(6,ybin)))
+            MuIDGH_err = MuID2016GHhisto2d.GetBinError(xbin,max(1,min(6,ybin)))
 
             MuIDSF[0] *= 0.55*MuIDBF + 0.45*MuIDGH
 
