@@ -1,5 +1,5 @@
-	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_190215_pt20/
-	OUTPUTNAME=190215_pt20
+	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_190219_pt20/
+	OUTPUTNAME=190219_pt20
 
 	CONDOR_CLUSTER_ID=$1
 	CONDOR_PROCESS_ID=$2

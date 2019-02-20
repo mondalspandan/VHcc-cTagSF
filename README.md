@@ -28,11 +28,12 @@ The input directory is expected to contain one sub-directory for each process. T
 Create the corresponding submit file by running:
 ```python make_submit.py filelists condor_runscript_XX.sh```
 This creates a new `submit.sub` file which can be edited as per requirements.
-4. Open `condor_runscript_XX.sh` and replace the first line with the desired output directory.
-5. Initiate voms-proxy using `voms-proxy-init --voms cms --valid 168:00` if not initiated already. Submit condor jobs using:
+4. Make sure all the `condor_runscript_*.sh` files are executable by running `chmod +x *.sh`
+5. Open `condor_runscript_XX.sh` and replace the first line with the desired output directory.
+6. Initiate voms-proxy using `voms-proxy-init --voms cms --valid 168:00` if not initiated already. Submit condor jobs using:
 ```condor_submit submit.sub```
-6. Job progress can be checked using `condor_q`.
-7. Repeat for other Analyzers. Make sure the output directory (first line of `condor_runscript_XX.sh`) is different for each Analyzer.
+7. Job progress can be checked using `condor_q`.
+8. Repeat for other Analyzers. Make sure the output directory (first line of `condor_runscript_XX.sh`) is different for each Analyzer.
 
 ## II. StackPlotter
 This step produces flat histograms (1D or 2D) from trees that are produced in the previous step. This step takes the outputs of the Analyzer code as inputs. This code can be run locally or on HTCondor.
@@ -133,9 +134,10 @@ All the required CvsL and CvsB plots along with all systematic variations are pr
 3. Edit WcPath, TTPath, DYPath to the corresponding directories of the Analyzer outputs.
 4. Edit `systs` to indicate the required systematics (comment out JES/R if you selected the NoJEC versions of the Analyzers).
 5. Open `condor_runscript.sh` and set OUTPUTDIR to desired output path. Change OUTPUTNAME to match outDir set in step 2.
-6. Run `python systStacker_condor.py`. This creates a new file `cmdList.txt` containing all the Stacker commands to be executed.
-7. Submit jobs for all the commands using `condor_submit submit.sub`.
-8. Job progress can be checked using `condor_q`.
+6. Make sure `condor_runscript.sh` is executable by running `chmod +x condor_runscript.sh`
+7. Run `python systStacker_condor.py`. This creates a new file `cmdList.txt` containing all the Stacker commands to be executed.
+8. Submit jobs for all the commands using `condor_submit submit.sub`.
+9. Job progress can be checked using `condor_q`.
 
 ## III. SF Extractor
 This section calculates the c-tagging scale factors from the files produced by the StackPlotter.

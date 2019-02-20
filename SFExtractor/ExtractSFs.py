@@ -147,7 +147,7 @@ def combineChannels(flE,flM,fl3=""):
     return ce, be, le, de
 
 def makeDict(dir,wantData=False):
-    rootFileList = [os.path.join(dir,i) for i in os.listdir(dir) if i.startswith('2D_') and i.endswith('.root')]
+    rootFileList = [os.path.join(dir,i) for i in os.listdir(dir) if i.endswith('.root')]
     for fl in rootFileList:
         # ============== Old naming conventions ==============
         # print fl
@@ -192,13 +192,13 @@ def makeDict(dir,wantData=False):
 #     cTT,bTT,lTT,dTT = getcbld(TTMFile)
     cDY,bDY,lDY,dDY = getcbld(DYMFile)
 
-    # print "Report:"
+#    print "Report:"
     WTotal = cW.Integral()+bW.Integral()+lW.Integral()
     TTTotal = cTT.Integral()+bTT.Integral()+lTT.Integral()
     DYTotal = cDY.Integral()+bDY.Integral()+lDY.Integral()
-    # print "W Region:  Events: %d, c=%d %%, b=%d %%, l=%d %%"%(WTotal,cW.Integral()/WTotal*100,bW.Integral()/WTotal*100,lW.Integral()/WTotal*100)
-    # print "TT Region: Events: %d, c=%d %%, b=%d %%, l=%d %%"%(TTTotal,cTT.Integral()/TTTotal*100,bTT.Integral()/TTTotal*100,lTT.Integral()/TTTotal*100)
-    # print "DY Region: Events: %d, c=%d %%, b=%d %%, l=%d %%"%(DYTotal,cDY.Integral()/DYTotal*100,bDY.Integral()/DYTotal*100,lDY.Integral()/DYTotal*100)
+    print "W Region:  Events: %d, c=%d %%, b=%d %%, l=%d %%, data: %d"%(WTotal,cW.Integral()/WTotal*100,bW.Integral()/WTotal*100,lW.Integral()/WTotal*100, dW.Integral())
+    print "TT Region: Events: %d, c=%d %%, b=%d %%, l=%d %%, data: %d"%(TTTotal,cTT.Integral()/TTTotal*100,bTT.Integral()/TTTotal*100,lTT.Integral()/TTTotal*100, dTT.Integral())
+    print "DY Region: Events: %d, c=%d %%, b=%d %%, l=%d %%, data: %d"%(DYTotal,cDY.Integral()/DYTotal*100,bDY.Integral()/DYTotal*100,lDY.Integral()/DYTotal*100, dDY.Integral())
 
     '''
     jet1 is b-enriched aka my TT region.

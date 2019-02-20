@@ -14,7 +14,7 @@ for line in f1:
     f.write(ln)
 f1.close()
 
-if 'NoJEC' not in runscript: f.write("+RequestRuntime = 18000\n\n")
+if 'DY' in runscript and 'NoJEC' not in runscript: f.write("+RequestRuntime = 18000\n\n")
 
 for fl in [i for i in os.listdir(inputdir) if os.path.isfile(os.path.join(inputdir,i))]:
     f.write("\nqueue INFILE from "+inputdir.rstrip('/')+"/"+fl+"\n")

@@ -8,9 +8,9 @@ import os, time, sys, Stacker
 # plotStack("jetMu_Pt",r"p^{#mu}_{T} [GeV], 50<p^{jet}_{T}<70",15,0,25,selections=[["jet_Pt","muJet_idx"]],cuts=[[50,70]])
 # plotStack("jetMu_Pt",r"p^{#mu}_{T} [GeV], 70<p^{jet}_{T}<200",15,0,25,selections=[["jet_Pt","muJet_idx"]],cuts=[[70,200]])
 
+DYPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190219_DY_pt20/"
+TTPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190219_TT_pt20/"
 WcPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190206_pt20/"
-TTPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190213_TT_pt20_2/"
-DYPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190206_DY_pt20/"
 
 if len(sys.argv) > 1:
     start_idx = 1 + float(sys.argv[1])
@@ -71,10 +71,10 @@ arguments = '''
 #             ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
 #             ["jet_Phi","muJet_idx"],r"#phi_{jet} (e)",20,-3.2,3.2,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
 
-              # ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
-              # ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
-              # ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
-              # ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
+#               ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+#               ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
+#               ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+#               ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
 #             ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,MSEL,MCUT,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,WCWEIGHT
 #             ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,ESEL,ECUT,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_e",makeROOT=True,WCWEIGHT
 
@@ -88,27 +88,27 @@ arguments = '''
 #             ["jet_Eta","muJet_idx"],r"#eta_{jet} (e)",20,-2.8,2.8,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
 #             ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
 #             ["jet_Phi","muJet_idx"],r"#phi_{jet} (e)",20,-3.2,3.2,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-              # ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-              # ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-              # ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-              # ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
+#               ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
+#               ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
+#               ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
+#               ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
 #            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSELM,TTCUTM,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,TTWEIGHT
 #            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSELE,TTCUTE,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_e",makeROOT=True,TTWEIGHT
 
 
            #
            #  "met_Pt",r"E^{miss}_{T}",30,0,300,TTSEL,TTCUT,dataset="",TTWEIGHT
-            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu e)",20,-3.2,3.2,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
-            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu e)",20,-2.8,2.8,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
-            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu e)",28,20,300,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu e)",20,-3.2,3.2,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu e)",20,-2.8,2.8,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu e)",28,20,300,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
 
-            ["jet_Phi","muJet_idx"],r"#phi_{jet} (e e)",20,-3.2,3.2,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
-            ["jet_Eta","muJet_idx"],r"#eta_{jet} (e e)",20,-2.8,2.8,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
-            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e e)",28,20,300,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (e e)",20,-3.2,3.2,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (e e)",20,-2.8,2.8,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e e)",28,20,300,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
 
-            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu #mu)",20,-3.2,3.2,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
-            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu #mu)",20,-2.8,2.8,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
-            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu #mu)",28,20,300,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu #mu)",20,-3.2,3.2,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu #mu)",20,-2.8,2.8,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu #mu)",28,20,300,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
 
            #   ["jet_CvsL","muJet_idx"],"Jet CvsL",25,0,1,TTSEL,TTCUT,dataset="",makeROOT=True,TTWEIGHT
            #   ["jet_CvsB","muJet_idx"],"Jet CvsB",25,0,1,TTSEL,TTCUT,dataset="",makeROOT=True,TTWEIGHT
@@ -116,17 +116,19 @@ arguments = '''
            # "jet_nJet","# jets",5,1,6,TTWEIGHT
            # "Z_Mass",r"M_{#mu e} (GeV)",25,0,150,TTWEIGHT
 
-           # ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
-           # ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
+            ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="mue",TTWEIGHT
+            ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="mue",TTWEIGHT
+            
            # # ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV]",28,20,300,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
-           # ["jet_CvsL",0],"CvsL",5,0,1,TTSELME,TTCUTME,dataset="smu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,TTWEIGHT
+#            ["jet_CvsL",0],"CvsL",5,0,1,TTSELME,TTCUTME,dataset="smu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,TTWEIGHT
            #
-           # ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
-           # ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+#            ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+#            ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+           
            # ["jet_CvsL",0],"CvsL",5,0,1,TTSELMM,TTCUTMM,dataset="dmu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,TTWEIGHT
            #
-           # ["jet_CvsL","muJet_idx"],r"Jet CvsL (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
-           # ["jet_CvsB","muJet_idx"],r"Jet CvsB (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+#            ["jet_CvsL","muJet_idx"],r"Jet CvsL (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+#            ["jet_CvsB","muJet_idx"],r"Jet CvsB (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
            # ["jet_CvsL",0],"CvsL",5,0,1,TTSELEE,TTCUTEE,dataset="deg",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,TTWEIGHT
 
 
@@ -134,8 +136,8 @@ arguments = '''
             # ["jet_Phi",0],r"#phi_{jet}",20,-3.2,3.2,dataset="dmu",DYWEIGHT
             # ["jet_Eta",0],r"#eta_{jet}",20,-2.8,2.8,dataset="dmu",DYWEIGHT
 #             ["jet_Pt",0],r"p^{jet}_{T} [GeV]",25,0,100,dataset="dmu",DYWEIGHT
-             # ["jet_CvsL",0],"Jet CvsL",25,0,1,dataset="dmu",makeROOT=True,DYWEIGHT
-             # ["jet_CvsB",0],"Jet CvsB",25,0,1,dataset="dmu",makeROOT=True,DYWEIGHT
+#              ["jet_CvsL",0],"Jet CvsL",25,0,1,dataset="dmu",makeROOT=True,DYWEIGHT
+#              ["jet_CvsB",0],"Jet CvsB",25,0,1,dataset="dmu",makeROOT=True,DYWEIGHT
 #            ["jet_CvsL",0],"CvsL",5,0,1,dataset="dmu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True,DYWEIGHT
             '''
 
