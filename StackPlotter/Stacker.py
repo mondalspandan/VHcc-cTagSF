@@ -16,7 +16,7 @@ gStyle.SetLegendBorderSize(0)
 
 lumi = 35900
 # outDir="Plots_190116_3mva80rewt_OS-SS_MuPtJetPtRatioCut_noQCD_RelIso_hardLepJetPtRatio_dxyz_sip3d_nJet/"
-outDir="Plots_190213_TT_2"
+outDir="Plots_190220_ReWeighted"
 # outDir="Plots_190124_Test"
 yTitle="Events"
 MCWeightName="eventWeight"          #"genWeight"      #
@@ -25,7 +25,7 @@ rootPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190206_pt20_TT/"
 useQCD = False
 moreQCD = False
 testMode = False
-reWeight = False
+reWeight = True
 
 if reWeight:
     wtFile = TFile.Open("SFs.root","READ")
@@ -192,7 +192,7 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
         if divideByFlav:
             hFlv = list(myChain.__getattr__("jet_hadronFlv"))
             iJet = int(myChain.__getattr__("muJet_idx"))
-            # if iJet < 0: iJet = 0
+            if iJet < 0: iJet = 0
             numOf_cJet = int(myChain.__getattr__("numOf_cJet"))
             flv = hFlv[iJet]
             if flv==5:
@@ -504,18 +504,21 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     finalHists = {}
     sampleNamesSet = list(sorted(set(sampleNames),key=sampleNames.index))
 
-    # if len(sys.argv) > 1:   # test mode
-    # # Not upto date
-    #     print "Test Mode"
-    #     sampleNames =   ["W+charm","W+uds","W+b","DY+Jets","ttbar"]
-    #     WPaths = ["test_w/"]
-    #     samplePaths = ["test_dy","test_tt"]
-    #
-    #     sMuPath  = "test_smu"
-    #     sElePath = ""
-    #
-    #     XSecs = [50260*1.21]*3+[2075.14*3, 730.6]
-    # -----------------------------------------------------------------
+    if not dataset=="":
+        if dataset=="smu":
+            datadir = sMuPath
+        elif dataset=="sele":
+            datadir = sElePath
+        elif dataset=="dmu":
+            datadir = dMuPath
+        elif dataset=="deg":
+            datadir = dEGPath
+        elif dataset=="mue":
+            datadir = dMuEGPath
+            global lumi
+            lumi = 35608
+        else:
+            raise ValueError
 
     c = TCanvas("main",brLabel,1200,1200)
     c.SetCanvasSize(1200,1200)
@@ -670,19 +673,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     # ----------------------------------------------------------
 
     # ===================== Make data histo ==========================
-    if not dataset=="":
-        if dataset=="smu":
-            datadir = sMuPath
-        elif dataset=="sele":
-            datadir = sElePath
-        elif dataset=="dmu":
-            datadir = dMuPath
-        elif dataset=="deg":
-            datadir = dEGPath
-        elif dataset=="mue":
-            datadir = dMuEGPath
-        else:
-            raise ValueError
+    if not dataset=="":        
         histoD, nTot = makeHisto(datadir,"Events",brName,brLabel,nbins,start,end,weightName=DataWeightName,selections=selections,cuts=cuts,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),makeCustomH=makeCustomH)
 
         if not dataStat=="":
