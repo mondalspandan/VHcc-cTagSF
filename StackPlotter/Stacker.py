@@ -16,22 +16,15 @@ gStyle.SetLegendBorderSize(0)
 
 lumi = 35900
 # outDir="Plots_190116_3mva80rewt_OS-SS_MuPtJetPtRatioCut_noQCD_RelIso_hardLepJetPtRatio_dxyz_sip3d_nJet/"
-outDir="Plots_190220_ReWeighted"
+outDir="Plots_190220_ReWeighted_2"
 # outDir="Plots_190124_Test"
 yTitle="Events"
 MCWeightName="eventWeight"          #"genWeight"      #
 DataWeightName="eventWeight"        #   "eventWeight"
-rootPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190206_pt20_TT/"
+rootPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190228_pt20/"
 useQCD = False
 moreQCD = False
 testMode = False
-reWeight = True
-
-if reWeight:
-    wtFile = TFile.Open("SFs.root","READ")
-    cWtHist = wtFile.Get("SFc_hist_central")
-    bWtHist = wtFile.Get("SFb_hist_central")
-    lWtHist = wtFile.Get("SFl_hist_central")
 
 def getbrText(brName):
     if type(brName) is str:
@@ -146,8 +139,10 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
                 vectorBr = list(myChain.__getattr__(input[0]))
                 vecIdx = input[1]
                 if type(vecIdx) is int:
+                    if "Cvs" in input[0] and vectorBr[vecIdx] < 0.: return -0.1
                     return vectorBr[vecIdx]
                 elif type(vecIdx) is str:
+                    if "Cvs" in input[0] and vectorBr[ int(myChain.__getattr__(vecIdx)) ] < 0.: return -0.1
                     return vectorBr[ int(myChain.__getattr__(vecIdx)) ]
                 else:
                     raise ValueError
@@ -226,9 +221,10 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
             for iJ in range(int(parseBrStr("jet_nJet"))):
                 CvsLval = parseBrStr(["jet_CvsL",iJ])
                 CvsBval = parseBrStr(["jet_CvsB",iJ])
-                if CvsLval < 0. or CvsBval < 0:
+                if False: #CvsLval < 0. or CvsBval < 0:
                     ctagWt *= 1.
                 else:
+#                    ctagWtOld = ctagWt
                     flav = int(parseBrStr(["jet_hadronFlv",iJ]))
                     xbin = cWtHist.GetXaxis().FindBin(CvsLval)
                     ybin = cWtHist.GetYaxis().FindBin(CvsBval)
@@ -238,8 +234,10 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
                         ctagWt *= bWtHist.GetBinContent(xbin,ybin)
                     else:
                         ctagWt *= lWtHist.GetBinContent(xbin,ybin)
+#                    if CvsLval < 0.: print CvsLval, CvsBval, ctagWt/ctagWtOld 
             eventWeight *= ctagWt
-
+        
+        
         if brName2D == "":
             if not divideByFlav:
                 myHisto.Fill(brVal,eventWeight)
@@ -247,6 +245,17 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
                 myHisto[histoIdx].Fill(brVal,eventWeight)
         else:
             brVal2 = parseBrStr(brName2D)
+            # =============== Treating ==1 bins ==================
+            if brName[0] == "jet_CvsL" and brName2D[0] == "jet_CvsB":
+                if brVal >= 1.:
+                    brVal = 0.99999
+                if brVal2 >= 1.:
+                    brVal2 = 0.99999
+#                if brVal < 0:
+#                    brVal = 0.001
+#                if brVal2 < 0:
+#                    brVal2 = 0.001
+            # ===================================================        
             if not divideByFlav:
                 myHisto.Fill(brVal,brVal2,eventWeight)
             else:
@@ -255,8 +264,23 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     print dir, nTotalEvents
     return myHisto, nTotalEvents
 
-def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makeROOT=False,noRatio=False,makeCustomH=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat=""):
+def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makeROOT=False,noRatio=False,makeCustomH=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",drawDataMCRatioLine=False,normTotalMC=False):
+    
     if not brName2D=="": noRatio=True
+    
+    global wtFile, cWtHist, bWtHist, lWtHist, reWeight
+    if SFfile!="":
+        reWeight = True
+        wtFile = TFile.Open(SFfile,"READ")
+        cWtHist = wtFile.Get("SFc_hist_central")
+        bWtHist = wtFile.Get("SFb_hist_central")
+        lWtHist = wtFile.Get("SFl_hist_central")
+        outDir.rstrip('/')
+        outDir += "_" + SFfile.split('.')[0].split('_')[1]
+        print "Using c-tag SF file:", SFfile
+    else:
+        reWeight = False
+    
     if not outDir.endswith("/"): outDir += "/"
     os.system("mkdir -p "+outDir)
     # ================= Define names, locations, etc. ===================
@@ -549,6 +573,8 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     saveName = filePre+getbrText(brName)
     if not selections == "":
         for iSel, selection in enumerate(selections):
+            if selection in [["M_RelIso",0],"hardMu_Jet_PtRatio",["M_dz",0],["M_dxy",0],["M_sip3d",0]]: continue
+            if selection in [["E_RelIso",0],"hardE_Jet_PtRatio",["E_dz",0],["E_dxy",0],["E_sip3d",0]]: continue
             saveName += "+"
             if type(selection) is str:
                 saveName += selection+"_"+str(cuts[iSel][0])+"-"+str(cuts[iSel][1])
@@ -675,6 +701,20 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     # ===================== Make data histo ==========================
     if not dataset=="":        
         histoD, nTot = makeHisto(datadir,"Events",brName,brLabel,nbins,start,end,weightName=DataWeightName,selections=selections,cuts=cuts,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),makeCustomH=makeCustomH)
+        
+        if normTotalMC:
+            MCCount = myStack.GetStack().Last().Integral()
+            DataCount = histoD.Integral()
+            MCNormFactor = DataCount/MCCount
+            
+            myStack.Delete()
+            myStack = THStack("myStack","")
+
+            for iName in sampleNamesSet:
+                finalHists[iName].Scale(MCNormFactor)
+                myStack.Add(finalHists[iName],"hist")
+            
+            histoErr.Scale(MCNormFactor)
 
         if not dataStat=="":
             direction = dataStat.split("_")[1]
@@ -808,6 +848,15 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
             hLine = TLine(start,1,end,1)
             hLine.SetLineColor(kRed)
             hLine.Draw()
+            
+            if drawDataMCRatioLine:
+                MCCount = histoMC.Integral()
+                DataCount = histoD.Integral()
+                MCNormFactor = DataCount/MCCount
+                hLine2 = TLine(start,MCNormFactor,end,MCNormFactor)
+                hLine2.SetLineColor(kBlue)
+                hLine2.Draw()
+                
     # ----------------------------------------------------------
 
     # ======================== LaTeX ==========================
@@ -861,4 +910,4 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
 if __name__ == "__main__":
     if len(sys.argv)>1: testMode=True
 #    plotStack("jetMu_Pt",r"p^{#mu}_{T} [GeV] (mu)",15,0,25,selections=["is_M"],cuts=[[1,1]],dataset="smu",makeROOT=True,noRatio=True)
-    plotStack(["jet_CvsL","muJet_idx"],"CvsL",5,0,1,selections=["is_M"],cuts=[[1,1]],dataset="smu",brName2D=["jet_CvsB","muJet_idx"], brLabel2="CvsB",nbins2=5,start2=0,end2=1,drawStyle="",makeROOT=True)
+    plotStack(["jet_CvsL","muJet_idx"],"CvsL",5,0,1,selections=["is_M"],cuts=[[1,1]],dataset="smu",brName2D=["jet_CvsB","muJet_idx"], brLabel2="CvsB",nbins2=5,start2=0,end2=1,drawStyle="",makeROOT=True,SFfile="SFs_semilepExtended.root")

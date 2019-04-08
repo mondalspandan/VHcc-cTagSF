@@ -18,6 +18,8 @@ from binning import *
 from array import array
 import matplotlib.pyplot as plt
 
+skip1bins=True
+
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptStat(0)
 
@@ -27,11 +29,30 @@ parser.add_argument('--rate', default=7.5e-3,help='allowed rate of change in SF 
 #parser.add_argument('--NormalizeMCToData', default=True,help='Normalize Data-to-MC')
 parser.add_argument('--NormalizeMCToData', action='store_true', default=True, help='skip new features')
 parser.add_argument('--AdaptiveIteration', action='store_true', default=True, help='Order the iterative fit from purest region to impure')
+parser.add_argument('--semileptonic', action='store_true', help='Use only semileptonic ttbar selection instead of combined')
+parser.add_argument('--dileptonic', action='store_true', help='Use only dileptonic ttbar selection instead of combined')
+parser.add_argument('--verbose', action='store_true', help='More info in stdout')
+
+# The following two flags are for validation tests. Ignore for normal SF derivation
+parser.add_argument('--injectSF', default="",help='apply SFs of a given flavour from the start')
+parser.add_argument('--increaseFlav', default="",help='increase given flavour contribution by 20%')
+parser.add_argument('--increaseFlavPseudo', default="",help='increase given flavour contribution by 20%, use pseudodata')
+SFsource = "data/Plots_190219_pt20/190219_pt20_central/cTag_SFs_80X_Spandan.root"
+
 args = parser.parse_args()
 rate = float(args.rate)
 
 basedir = args.indir
 subdirs = [i for i in os.listdir(basedir) if os.path.isdir(basedir+"/"+i)]
+if args.injectSF == "":
+    injectSF = False
+else:
+    injectSF = True    
+    SFfl = ROOT.TFile.Open(SFsource)
+    SFhist = SFfl.Get("SF"+args.injectSF.lower()+"_hist_central")
+    if not SFhist:
+        print "Incorrect input for injectSF."
+        raise ValueError
 
 print "Normalize MC To Data:", args.NormalizeMCToData
 print "Adaptive order of iteration:", args.AdaptiveIteration
@@ -128,22 +149,54 @@ def getcbld(fl):
         elif hName.endswith("uds"):
             l.Add(h[hName])
     inp.Close()
+    
+    if args.increaseFlavPseudo=="c":
+        cnew=c.Clone()
+        cnew.Scale(1.2)
+        bnew=b.Clone()
+        lnew=l.Clone()
+        def getint(hist):
+            nbinx = hist.GetNbinsX()
+            nbiny = hist.GetNbinsY()
+            return hist.Integral(0,nbinx+1,0,nbiny+1)
+        bkgevents = getint(b)+getint(c)+getint(l)-getint(cnew)
+        bkgscale = bkgevents/(getint(b)+getint(l))
+        bnew.Scale(bkgscale)
+        lnew.Scale(bkgscale)
+        cnew.Add(bnew)
+        cnew.Add(lnew)
+        d=cnew.Clone()
+    
+    if args.NormalizeMCToData:
+        nbinx = d.GetNbinsX()
+        nbiny = d.GetNbinsY()
+        MC_Total = float(b.Integral(0,nbinx+1,0,nbiny+1) + c.Integral(0,nbinx+1,0,nbiny+1) + l.Integral(0,nbinx+1,0,nbiny+1))
+        Data_Total = float(d.Integral(0,nbinx+1,0,nbiny+1))        
+        scale = Data_Total / MC_Total
+        if args.verbose: print "        MC: %d, Data: %d, Scale: %f"%(MC_Total, Data_Total, scale)
+        c.Scale(scale)
+        b.Scale(scale)
+        l.Scale(scale)
+    
     return c,b,l,d
 
-def combineChannels(flE,flM,fl3=""):
+def combineChannels(flE,flM,fl3=[]):
+    if args.verbose: print "    Processing first channel:"
     ce,be,le,de = getcbld(flE)
+    if args.verbose: print "    Processing second channel:"
     cm,bm,lm,dm = getcbld(flM)
     ce.Add(cm)
     be.Add(bm)
     le.Add(lm)
     de.Add(dm)
-
-    if fl3 != "":
-        c3,b3,l3,d3 = getcbld(fl3)
-        ce.Add(c3)
-        be.Add(b3)
-        le.Add(l3)
-        de.Add(d3)
+    
+    if args.verbose: print "    Processing more channels:"
+    for fl in fl3:
+        c3,b3,l3,d3 = getcbld(fl)
+        ce.Add(c3.Clone())
+        be.Add(b3.Clone())
+        le.Add(l3.Clone())
+        de.Add(d3.Clone())
     return ce, be, le, de
 
 def makeDict(dir,wantData=False):
@@ -182,23 +235,41 @@ def makeDict(dir,wantData=False):
             TTMEFile = fl
         elif "DY_m_" in fl:
             DYMFile = fl
-
+        elif "TT_semi_m" in fl:
+            TTSemiMFile = fl
+        elif "TT_semi_e" in fl:
+            TTSemiEFile = fl
+    
+    if args.verbose: print "Processing W+c selection:"
     cW,bW,lW,dW = combineChannels(WcEFile,WcMFile)
-    # cTT,bTT,lTT,dTT = combineChannels(TTEFile,TTMFile)
-    cTT,bTT,lTT,dTT = combineChannels(TTEEFile,TTMMFile,TTMEFile)
+    
+    if args.verbose: print "Processing TT selection:"
+    if args.semileptonic:
+        cTT,bTT,lTT,dTT = combineChannels(TTSemiEFile,TTSemiMFile)
+        print "Using Semileptonic ttbar selection."
+    elif args.dileptonic:
+        cTT,bTT,lTT,dTT = combineChannels(TTEEFile,TTMMFile,[TTMEFile])
+        print "Using Dileptonic ttbar selection."
+    else:
+        cTT,bTT,lTT,dTT = combineChannels(TTEEFile,TTMMFile,[TTMEFile,TTSemiEFile,TTSemiMFile])
+        print "Using combined dileptonic and semileptonic ttbar selection."
 # #    cW,bW,lW,dW = getcbld(WcEFile)
 # #    cTT,bTT,lTT,dTT = getcbld(TTEFile)
 #     cW,bW,lW,dW = getcbld(WcMFile)
 #     cTT,bTT,lTT,dTT = getcbld(TTMFile)
+    if args.verbose: print "Processing DY selection:"
     cDY,bDY,lDY,dDY = getcbld(DYMFile)
-
+    
+    nbinx = cW.GetNbinsX()
+    nbiny = cW.GetNbinsY()
 #    print "Report:"
-    WTotal = cW.Integral()+bW.Integral()+lW.Integral()
-    TTTotal = cTT.Integral()+bTT.Integral()+lTT.Integral()
-    DYTotal = cDY.Integral()+bDY.Integral()+lDY.Integral()
-    print "W Region:  Events: %d, c=%d %%, b=%d %%, l=%d %%, data: %d"%(WTotal,cW.Integral()/WTotal*100,bW.Integral()/WTotal*100,lW.Integral()/WTotal*100, dW.Integral())
-    print "TT Region: Events: %d, c=%d %%, b=%d %%, l=%d %%, data: %d"%(TTTotal,cTT.Integral()/TTTotal*100,bTT.Integral()/TTTotal*100,lTT.Integral()/TTTotal*100, dTT.Integral())
-    print "DY Region: Events: %d, c=%d %%, b=%d %%, l=%d %%, data: %d"%(DYTotal,cDY.Integral()/DYTotal*100,bDY.Integral()/DYTotal*100,lDY.Integral()/DYTotal*100, dDY.Integral())
+    WTotal = cW.Integral(0,nbinx+1,0,nbiny+1)+bW.Integral(0,nbinx+1,0,nbiny+1)+lW.Integral(0,nbinx+1,0,nbiny+1)
+    TTTotal = cTT.Integral(0,nbinx+1,0,nbiny+1)+bTT.Integral(0,nbinx+1,0,nbiny+1)+lTT.Integral(0,nbinx+1,0,nbiny+1)
+    DYTotal = cDY.Integral(0,nbinx+1,0,nbiny+1)+bDY.Integral(0,nbinx+1,0,nbiny+1)+lDY.Integral(0,nbinx+1,0,nbiny+1)
+    if args.verbose:
+        print "W Region:  Events: %d, c=%f %%, b=%f %%, l=%f %%, data: %d"%(WTotal,cW.Integral(0,nbinx+1,0,nbiny+1)/WTotal*100,bW.Integral(0,nbinx+1,0,nbiny+1)/WTotal*100,lW.Integral(0,nbinx+1,0,nbiny+1)/WTotal*100, dW.Integral(0,nbinx+1,0,nbiny+1))
+        print "TT Region: Events: %d, c=%f %%, b=%f %%, l=%f %%, data: %d"%(TTTotal,cTT.Integral(0,nbinx+1,0,nbiny+1)/TTTotal*100,bTT.Integral(0,nbinx+1,0,nbiny+1)/TTTotal*100,lTT.Integral(0,nbinx+1,0,nbiny+1)/TTTotal*100, dTT.Integral(0,nbinx+1,0,nbiny+1))
+        print "DY Region: Events: %d, c=%f %%, b=%f %%, l=%f %%, data: %d"%(DYTotal,cDY.Integral(0,nbinx+1,0,nbiny+1)/DYTotal*100,bDY.Integral(0,nbinx+1,0,nbiny+1)/DYTotal*100,lDY.Integral(0,nbinx+1,0,nbiny+1)/DYTotal*100, dDY.Integral(0,nbinx+1,0,nbiny+1))
 
     '''
     jet1 is b-enriched aka my TT region.
@@ -223,6 +294,7 @@ for jet, flavor_dict in histo_dict_uncPositive.iteritems():
         for flav, hist in flavor_dict.iteritems():
             for binx in range(hist.GetNbinsX()):
                 for biny in range(hist.GetNbinsY()):
+                    if skip1bins and (binx==0 or biny==0) and not (binx==0 and biny==0): continue
 #                    if central_MC_histo_dict[jet][flav].GetBinContent(binx+1,biny+1) >= 0 :
 #                        stat_unc = sqrt(central_MC_histo_dict[jet][flav].GetBinContent(binx+1,biny+1))
 #                    else:
@@ -233,7 +305,7 @@ for jet, flavor_dict in histo_dict_uncPositive.iteritems():
 
 
 for systdir in syst_dirs:
-    print "Processing: %s"%systdir
+    print "\n\nProcessing: %s"%systdir
     dict_tmp  = makeDict(os.path.join(basedir,systdir))
     for jet, flavor_dict in dict_tmp.iteritems():
         for flav, hist in flavor_dict.iteritems():
@@ -243,6 +315,7 @@ for systdir in syst_dirs:
             diff_hist.Add(central_histo,-1)
             for binx in range(diff_hist.GetNbinsX()):
                 for biny in range(diff_hist.GetNbinsY()):
+                    if skip1bins and (binx==0 or biny==0) and not (binx==0 and biny==0): continue
                     if diff_hist.GetBinContent(binx+1,biny+1) > 0:
                         old_unc = histo_dict_uncPositive[jet][flav].GetBinContent(binx+1,biny+1)
                         histo_dict_uncPositive[jet][flav].SetBinContent(binx+1,biny+1,sqrt(old_unc**2 + diff_hist.GetBinContent(binx+1,biny+1)**2))
@@ -255,6 +328,7 @@ for jet, flavor_dict in histo_dict_uncTotal.iteritems():
     for flav, hist in flavor_dict.iteritems():
         for binx in range(hist.GetNbinsX()):
             for biny in range(hist.GetNbinsY()):
+                if skip1bins and (binx==0 or biny==0) and not (binx==0 and biny==0): continue
                 Positive_content = histo_dict_uncPositive[jet][flav].GetBinContent(binx+1,biny+1)
                 Negative_content = histo_dict_uncNegative[jet][flav].GetBinContent(binx+1,biny+1)
                 #print Positive_content,Negative_content
@@ -268,7 +342,12 @@ for jet, flavor_dict in histo_dict_uncTotal.iteritems():
 #
 #****************************************************
 
-
+for i in subdirs:
+    if i.endswith("central"):
+        cenName = i
+        break
+subdirs.remove(cenName)
+subdirs = [cenName]+subdirs
 
 for directory in [i for i in subdirs]:
     print "STARTING TO PROCESS %s"%directory
@@ -290,14 +369,19 @@ for directory in [i for i in subdirs]:
             for flav,hist in flav_dict.iteritems():
                 print jet, flav, hist.Integral()
 
-    if args.NormalizeMCToData:
-        #scale = 1.085
-#        print "Renomalize MC to data with scaleing factor: %.3f"%scale
-        for jet,flav_dict in histo_dict.iteritems():
-            scale = float(datahisto_dict[jet].Integral()) / float(histo_dict[jet]["b"].Integral() + histo_dict[jet]["c"].Integral() + histo_dict[jet]["l"].Integral())
-            print "Scale for jet,", jet,":",scale
-            for flav,hist in flav_dict.iteritems():
-                hist.Scale(scale)
+#    if args.NormalizeMCToData:
+#        #scale = 1.085
+##        print "Renomalize MC to data with scaleing factor: %.3f"%scale
+#        for jet,flav_dict in histo_dict.iteritems():
+#            nbinx = datahisto_dict[jet].GetNbinsX()
+#            nbiny = datahisto_dict[jet].GetNbinsY()
+#                        
+#            MC_Total = float(histo_dict[jet]["b"].Integral(0,nbinx+1,0,nbiny+1) + histo_dict[jet]["c"].Integral(0,nbinx+1,0,nbiny+1) + histo_dict[jet]["l"].Integral(0,nbinx+1,0,nbiny+1))
+#            Data_Total = float(datahisto_dict[jet].Integral(0,nbinx+1,0,nbiny+1))
+#            scale = Data_Total / MC_Total
+#            print "Scale for jet,", jet,":",scale,"; MC:",MC_Total,"; Data:", Data_Total
+#            for flav,hist in flav_dict.iteritems():
+#                hist.Scale(scale)
 
 #    for jet,flav_dict in histo_dict.iteritems():
 #            for flav,hist in flav_dict.iteritems():
@@ -323,12 +407,24 @@ for directory in [i for i in subdirs]:
 
     for binx in range(histo_dict["jet1"]["b"].GetNbinsX()):
         for biny in range(histo_dict["jet1"]["b"].GetNbinsY()):
+            if skip1bins and (binx==0 or biny==0) and not (binx==0 and biny==0): continue
 
            # if not (binx==1 and biny==1): continue
 
             convergence_dict[(binx,biny)] = {"SFb":[],"SFc":[],"SFl":[]}
 
             print binx+1,biny+1#,histo_dict["jet1"]["b"].GetBinContent(binx+1,biny+1)
+            
+            if injectSF:
+                toInject = SFhist.GetBinContent(binx+1,biny+1)
+                print "Injecting SF = %f for flavour %s."%(toInject,args.injectSF)
+                for jet in ["jet1","jet2","jet3"]:
+                    histo_dict[jet][args.injectSF].SetBinContent(binx+1,biny+1,histo_dict[jet][args.injectSF].GetBinContent(binx+1,biny+1)*toInject)
+            if args.increaseFlav != "":
+                print "Increasing %s flavour contribution by 20%%."%(args.increaseFlav)
+                for jet in ["jet1","jet2","jet3"]:
+                    histo_dict[jet][args.increaseFlav].SetBinContent(binx+1,biny+1,histo_dict[jet][args.increaseFlav].GetBinContent(binx+1,biny+1)*1.2)
+                
             N_MC_b1 = histo_dict["jet1"]["b"].GetBinContent(binx+1,biny+1)
             N_MC_c1 = histo_dict["jet1"]["c"].GetBinContent(binx+1,biny+1)
             N_MC_l1 = histo_dict["jet1"]["l"].GetBinContent(binx+1,biny+1)
@@ -539,7 +635,8 @@ for directory in [i for i in subdirs]:
                 previous_chi2_l = chi2_l(SFs_result)
 
                 for prio in range(3):
-                    if prio == lPriority:
+                    exec("improved_"+args.injectSF.lower()+" = True")
+                    if prio == lPriority and args.injectSF.lower() != "l":
                         #
                         # First optimize SFl
                         #
@@ -558,7 +655,7 @@ for directory in [i for i in subdirs]:
 
                         convergence_dict[(binx,biny)]["SFl"].append(SFs_result[2])
 
-                    if prio == bPriority:
+                    if prio == bPriority and args.injectSF.lower() != "b":
                         #
                         # Then optimize SFb
                         #
@@ -583,7 +680,7 @@ for directory in [i for i in subdirs]:
 
                         convergence_dict[(binx,biny)]["SFb"].append(SFs_result[0])
 
-                    if prio == cPriority:
+                    if prio == cPriority and args.injectSF.lower() != "c":
                         #
                         # Finally optimize SFc
                         #
@@ -784,6 +881,7 @@ for directory in [i for i in subdirs]:
      # Add fit uncertainty
     for binx in range(histo_dict["jet1"]["b"].GetNbinsX()):
         for biny in range(histo_dict["jet1"]["b"].GetNbinsY()):
+            if skip1bins and (binx==0 or biny==0) and not (binx==0 and biny==0): continue
             # SFb_hist.SetBinError(binx+1,biny+1,sqrt(SFb_hist.GetBinError(binx+1,biny+1)**2 + fit_unc_dict[(binx+1,biny+1)][0]**2))
             # SFc_hist.SetBinError(binx+1,biny+1,sqrt(SFc_hist.GetBinError(binx+1,biny+1)**2 + fit_unc_dict[(binx+1,biny+1)][1]**2))
             # SFl_hist.SetBinError(binx+1,biny+1,sqrt(SFl_hist.GetBinError(binx+1,biny+1)**2 + fit_unc_dict[(binx+1,biny+1)][2]**2))
@@ -935,9 +1033,36 @@ for directory in [i for i in subdirs]:
 
     outf = ROOT.TFile(current_dir+"/cTag_SFs_80X_Spandan.root","RECREATE")
     outf.cd()
+    
+    if skip1bins:    
+        for binx in range(histo_dict["jet1"]["b"].GetNbinsX()):
+            for biny in range(histo_dict["jet1"]["b"].GetNbinsY()):
+                if (binx==0 or biny==0) and not (binx==0 and biny==0):
+                    SFl_hist.SetBinContent(binx+1,biny+1,SFl_hist.GetBinContent(1,1))                    
+                    SFb_hist.SetBinContent(binx+1,biny+1,SFb_hist.GetBinContent(1,1))
+                    SFc_hist.SetBinContent(binx+1,biny+1,SFc_hist.GetBinContent(1,1))
+                    SFl_hist.SetBinError(binx+1,biny+1,SFl_hist.GetBinError(1,1))
+                    SFb_hist.SetBinError(binx+1,biny+1,SFb_hist.GetBinError(1,1))
+                    SFc_hist.SetBinError(binx+1,biny+1,SFc_hist.GetBinError(1,1))
+                    
+        for binx in range(histo_dict["jet1"]["b"].GetNbinsX()+1):
+            SFl_hist.SetBinContent(binx,0,SFl_hist.GetBinContent(1,1))
+            SFb_hist.SetBinContent(binx,0,SFb_hist.GetBinContent(1,1))
+            SFc_hist.SetBinContent(binx,0,SFc_hist.GetBinContent(1,1))
+            SFl_hist.SetBinError(binx,0,SFl_hist.GetBinError(1,1))
+            SFb_hist.SetBinError(binx,0,SFb_hist.GetBinError(1,1))
+            SFc_hist.SetBinError(binx,0,SFc_hist.GetBinError(1,1))
+        for biny in range(histo_dict["jet1"]["b"].GetNbinsY()+1):
+            SFl_hist.SetBinContent(0,biny,SFl_hist.GetBinContent(1,1))
+            SFb_hist.SetBinContent(0,biny,SFb_hist.GetBinContent(1,1))
+            SFc_hist.SetBinContent(0,biny,SFc_hist.GetBinContent(1,1))
+            SFl_hist.SetBinError(0,biny,SFl_hist.GetBinError(1,1))
+            SFb_hist.SetBinError(0,biny,SFb_hist.GetBinError(1,1))
+            SFc_hist.SetBinError(0,biny,SFc_hist.GetBinError(1,1))
     SFl_hist.Write()
     SFb_hist.Write()
     SFc_hist.Write()
+        
     outf.Close()
 
 

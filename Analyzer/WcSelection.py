@@ -210,6 +210,7 @@ met_Pt             = array('d',[0])
 met_signif         = array('d',[0])
 is_E               = array('d',[0])
 is_M               = array('d',[0])
+diLepVeto          = array('d',[0])
 # is_H_mass_CR       = array('d',[0])
 # is_W_mass_CR       = array('d',[0])
 
@@ -446,6 +447,7 @@ outputTree.Branch('W_Phi_nuSol'      ,W_Phi_nuSol     ,'W_Phi_nuSol/D'     )
 
 outputTree.Branch('is_E'     ,is_E    ,'is_E/D'     )
 outputTree.Branch('is_M'     ,is_M    ,'is_M/D'     )
+outputTree.Branch('diLepVeto'     ,diLepVeto    ,'diLepVeto/D'     )
 
 # outputTree.Branch('is_H_mass_CR'     ,is_H_mass_CR    ,'is_H_mass_CR/D'     )
 # outputTree.Branch('is_W_mass_CR'     ,is_W_mass_CR    ,'is_W_mass_CR/D'     )
@@ -620,6 +622,7 @@ for entry in inputTree:
 
     is_E[0]             = False
     is_M[0]             = False
+    diLepVeto[0]        = False
 
     run[0]              = -1000
     lumiBlock[0]        = -1000
@@ -865,6 +868,26 @@ for entry in inputTree:
     if len(m_Pt_List) == 1:
         isElec = False
         mu_List = sorted(zip(m_Pt_List,m_Charge_List), key = lambda pair : pair[0], reverse=True)[0:2]
+    # ==========================================================================
+    
+    # ================ Second lepton matching ttbar dileptonic =================
+    nEleDilep = 0
+    nMuDilep = 0
+    
+    for i in range(0, len(entry.Electron_pt)):
+        if entry.Electron_pt[i]<15 or abs(entry.Electron_eta[i])>2.5: continue
+        if abs(entry.Electron_eta[i]) > 1.442 and abs(entry.Electron_eta[i]) < 1.556: continue
+        if entry.Electron_mvaSpring16GP_WP80[i]<=0: continue
+        nEleDilep += 1
+
+    for i in range(0, len(entry.Muon_pt)):
+        if entry.Muon_pt[i]<12 or abs(entry.Muon_eta[i])>2.4: continue
+        if entry.Muon_tightId[i]<=0: continue
+        if entry.Muon_pfRelIso04_all[i]>0.15: continue
+        nMuDilep += 1
+        
+    if (nEleDilep == 2 and nMuDilep == 0) or (nEleDilep == 0 and nMuDilep == 2) or (nEleDilep == 1 and nMuDilep == 1):
+        diLepVeto[0] = 1
     # ==========================================================================
 
     # ============================== Get MET ===================================

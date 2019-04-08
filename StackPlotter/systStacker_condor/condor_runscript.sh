@@ -1,5 +1,5 @@
-	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_190219_pt20/
-	OUTPUTNAME=190219_pt20
+	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_190403_pt20_BinnedKins/
+	OUTPUTNAME=190403_pt20
 
 	CONDOR_CLUSTER_ID=$1
 	CONDOR_PROCESS_ID=$2
@@ -14,7 +14,7 @@
 
         echo "creating tempdir and copy"
         tmp_dir=$(mktemp -d)
-        cp -r ../Stacker.py cmdList.txt $tmp_dir
+        cp -r ../Stacker.py cmdList.txt ../SFs*.root $tmp_dir
 
         echo "setting up the environment"
         cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_10_2_0_pre6/src

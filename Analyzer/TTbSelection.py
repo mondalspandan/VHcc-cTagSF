@@ -865,7 +865,7 @@ for entry in inputTree:
 
     # =======================  1 e+- 1 mu-+ cut ===========================
     if len(m_Pt_List) == 1 and len(e_Pt_List) == 1:
-        if m_Pt_List[0] < 25. and e_Pt_List[0] < 27.: continue
+        if m_Pt_List[0] < 25. and e_Pt_List[0] < 27. : continue
         if m_Pt_List[0] < 14.: continue
         if e_Charge_List[0]*m_Charge_List[0] > 0 : continue
         
@@ -1092,8 +1092,32 @@ for entry in inputTree:
         print "Preselection 4 : TRIGGERS"
     if is_ME[0]:
         if "Double" in channel: continue
-        if ( entry.HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL == 0 ) and ( entry.HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL == 0 ): continue
-#        if ( entry.HLT_IsoMu24 == 0 ) and ( entry.HLT_IsoTkMu24 == 0 ): continue
+        
+        MuonEGTriglist = [
+                "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL",
+                "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ",
+                "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL",
+                "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ",
+                "HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL",
+                "HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ",
+                "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL",
+                "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL",
+                "HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL",
+                "HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ",
+                "HLT_Mu8_DiEle12_CaloIdL_TrackIdL",
+                "HLT_DiMu9_Ele9_CaloIdL_TrackIdL"
+            ]
+            
+        MuonEGTrig = False
+        for trig in MuonEGTriglist:
+            if trig in validBranches:
+                exec("trigVal = entry."+trig)
+                if trigVal:
+                    MuonEGTrig = True
+                    break                    
+
+        if not MuonEGTrig: continue
+        
     elif is_MM[0]:
         if "DoubleEG" in channel or "MuonEG" in channel: continue
         if ( entry.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL == 0 ) and ( entry.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ == 0 ) \

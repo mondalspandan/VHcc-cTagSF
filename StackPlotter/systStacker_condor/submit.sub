@@ -9,8 +9,6 @@ arguments    = $(ClusterId) $(ProcId)
 Notification = never
 on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
 
-+RequestRuntime = 7200
-
 queue CMD from cmdList.txt
 
 
