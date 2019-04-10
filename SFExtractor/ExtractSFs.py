@@ -17,6 +17,7 @@ from copy import deepcopy
 from binning import *
 from array import array
 import matplotlib.pyplot as plt
+from PIL import Image
 
 skip1bins=True
 
@@ -37,7 +38,7 @@ parser.add_argument('--verbose', action='store_true', help='More info in stdout'
 parser.add_argument('--injectSF', default="",help='apply SFs of a given flavour from the start')
 parser.add_argument('--increaseFlav', default="",help='increase given flavour contribution by 20%')
 parser.add_argument('--increaseFlavPseudo', default="",help='increase given flavour contribution by 20%, use pseudodata')
-SFsource = "data/Plots_190219_pt20/190219_pt20_central/cTag_SFs_80X_Spandan.root"
+SFsource = "SFs_inclTTbar.root"
 
 args = parser.parse_args()
 rate = float(args.rate)
@@ -47,7 +48,7 @@ subdirs = [i for i in os.listdir(basedir) if os.path.isdir(basedir+"/"+i)]
 if args.injectSF == "":
     injectSF = False
 else:
-    injectSF = True    
+    injectSF = True
     SFfl = ROOT.TFile.Open(SFsource)
     SFhist = SFfl.Get("SF"+args.injectSF.lower()+"_hist_central")
     if not SFhist:
@@ -149,7 +150,7 @@ def getcbld(fl):
         elif hName.endswith("uds"):
             l.Add(h[hName])
     inp.Close()
-    
+
     if args.increaseFlavPseudo=="c":
         cnew=c.Clone()
         cnew.Scale(1.2)
@@ -166,18 +167,52 @@ def getcbld(fl):
         cnew.Add(bnew)
         cnew.Add(lnew)
         d=cnew.Clone()
-    
+
+    if args.increaseFlavPseudo=="b":
+        bnew=b.Clone()
+        bnew.Scale(1.2)
+        cnew=c.Clone()
+        lnew=l.Clone()
+        def getint(hist):
+            nbinx = hist.GetNbinsX()
+            nbiny = hist.GetNbinsY()
+            return hist.Integral(0,nbinx+1,0,nbiny+1)
+        bkgevents = getint(b)+getint(c)+getint(l)-getint(bnew)
+        bkgscale = bkgevents/(getint(c)+getint(l))
+        cnew.Scale(bkgscale)
+        lnew.Scale(bkgscale)
+        bnew.Add(cnew)
+        bnew.Add(lnew)
+        d=bnew.Clone()
+
+    if args.increaseFlavPseudo=="l":
+        lnew=l.Clone()
+        lnew.Scale(1.2)
+        cnew=c.Clone()
+        bnew=b.Clone()
+        def getint(hist):
+            nbinx = hist.GetNbinsX()
+            nbiny = hist.GetNbinsY()
+            return hist.Integral(0,nbinx+1,0,nbiny+1)
+        bkgevents = getint(b)+getint(c)+getint(l)-getint(lnew)
+        bkgscale = bkgevents/(getint(c)+getint(b))
+        cnew.Scale(bkgscale)
+        bnew.Scale(bkgscale)
+        lnew.Add(cnew)
+        lnew.Add(bnew)
+        d=lnew.Clone()
+
     if args.NormalizeMCToData:
         nbinx = d.GetNbinsX()
         nbiny = d.GetNbinsY()
         MC_Total = float(b.Integral(0,nbinx+1,0,nbiny+1) + c.Integral(0,nbinx+1,0,nbiny+1) + l.Integral(0,nbinx+1,0,nbiny+1))
-        Data_Total = float(d.Integral(0,nbinx+1,0,nbiny+1))        
+        Data_Total = float(d.Integral(0,nbinx+1,0,nbiny+1))
         scale = Data_Total / MC_Total
         if args.verbose: print "        MC: %d, Data: %d, Scale: %f"%(MC_Total, Data_Total, scale)
         c.Scale(scale)
         b.Scale(scale)
         l.Scale(scale)
-    
+
     return c,b,l,d
 
 def combineChannels(flE,flM,fl3=[]):
@@ -189,7 +224,7 @@ def combineChannels(flE,flM,fl3=[]):
     be.Add(bm)
     le.Add(lm)
     de.Add(dm)
-    
+
     if args.verbose: print "    Processing more channels:"
     for fl in fl3:
         c3,b3,l3,d3 = getcbld(fl)
@@ -239,10 +274,10 @@ def makeDict(dir,wantData=False):
             TTSemiMFile = fl
         elif "TT_semi_e" in fl:
             TTSemiEFile = fl
-    
+
     if args.verbose: print "Processing W+c selection:"
     cW,bW,lW,dW = combineChannels(WcEFile,WcMFile)
-    
+
     if args.verbose: print "Processing TT selection:"
     if args.semileptonic:
         cTT,bTT,lTT,dTT = combineChannels(TTSemiEFile,TTSemiMFile)
@@ -259,7 +294,7 @@ def makeDict(dir,wantData=False):
 #     cTT,bTT,lTT,dTT = getcbld(TTMFile)
     if args.verbose: print "Processing DY selection:"
     cDY,bDY,lDY,dDY = getcbld(DYMFile)
-    
+
     nbinx = cW.GetNbinsX()
     nbiny = cW.GetNbinsY()
 #    print "Report:"
@@ -375,7 +410,7 @@ for directory in [i for i in subdirs]:
 #        for jet,flav_dict in histo_dict.iteritems():
 #            nbinx = datahisto_dict[jet].GetNbinsX()
 #            nbiny = datahisto_dict[jet].GetNbinsY()
-#                        
+#
 #            MC_Total = float(histo_dict[jet]["b"].Integral(0,nbinx+1,0,nbiny+1) + histo_dict[jet]["c"].Integral(0,nbinx+1,0,nbiny+1) + histo_dict[jet]["l"].Integral(0,nbinx+1,0,nbiny+1))
 #            Data_Total = float(datahisto_dict[jet].Integral(0,nbinx+1,0,nbiny+1))
 #            scale = Data_Total / MC_Total
@@ -414,7 +449,7 @@ for directory in [i for i in subdirs]:
             convergence_dict[(binx,biny)] = {"SFb":[],"SFc":[],"SFl":[]}
 
             print binx+1,biny+1#,histo_dict["jet1"]["b"].GetBinContent(binx+1,biny+1)
-            
+
             if injectSF:
                 toInject = SFhist.GetBinContent(binx+1,biny+1)
                 print "Injecting SF = %f for flavour %s."%(toInject,args.injectSF)
@@ -424,7 +459,7 @@ for directory in [i for i in subdirs]:
                 print "Increasing %s flavour contribution by 20%%."%(args.increaseFlav)
                 for jet in ["jet1","jet2","jet3"]:
                     histo_dict[jet][args.increaseFlav].SetBinContent(binx+1,biny+1,histo_dict[jet][args.increaseFlav].GetBinContent(binx+1,biny+1)*1.2)
-                
+
             N_MC_b1 = histo_dict["jet1"]["b"].GetBinContent(binx+1,biny+1)
             N_MC_c1 = histo_dict["jet1"]["c"].GetBinContent(binx+1,biny+1)
             N_MC_l1 = histo_dict["jet1"]["l"].GetBinContent(binx+1,biny+1)
@@ -511,93 +546,56 @@ for directory in [i for i in subdirs]:
             print N_MC_b2,N_MC_c2, N_MC_l2,N_MC_b2+N_MC_c2+ N_MC_l2, N_Data_2
             print N_MC_b3,N_MC_c3, N_MC_l3,N_MC_b3+N_MC_c3+ N_MC_l3, N_Data_3
 
-            perfCanvas = ROOT.TCanvas("perf","perf",1200,600)
-#            leftCanvas = ROOT.TPad("left","left",0,0,0.5,1)
-#            rightCanvas = ROOT.TPad("right","right",0.5,0,1,1)
-#            leftCanvas.cd()
-            perfCanvas.Divide(2,1,0.01,0.01)
-            perfCanvas.cd(1)
-            chist = ROOT.TH1F("c","c",3,0,3)
-            bhist = ROOT.TH1F("b","b",3,0,3)
-            lhist = ROOT.TH1F("l","l",3,0,3)
-            dhist = ROOT.TH1F("d","d",3,0,3)
+
+            perfCanvas = ROOT.TCanvas("perf","perf",600,600)
+
+            chist = ROOT.TH1F("c","c",10,-5,5)
+            bhist = ROOT.TH1F("b","b",10,-5,5)
+            lhist = ROOT.TH1F("l","l",10,-5,5)
+            dhist = ROOT.TH1F("d","d",10,-5,5)
             chist.Sumw2()
             bhist.Sumw2()
             lhist.Sumw2()
             dhist.Sumw2()
 
-            chist.SetBinContent(1,N_MC_c1)
-            chist.SetBinContent(2,N_MC_c2)
-            chist.SetBinContent(3,N_MC_c3)
-            chist.SetBinError(1,Total_Unc_c1)
-            chist.SetBinError(2,Total_Unc_c2)
-            chist.SetBinError(3,Total_Unc_c3)
-            chist.SetFillColor(ROOT.kCyan+1)
+            chist.SetBinContent(2,N_MC_c1)
+            chist.SetBinContent(3,N_MC_c2)
+            chist.SetBinContent(4,N_MC_c3)
+            chist.SetBinError(2,Total_Unc_c1)
+            chist.SetBinError(3,Total_Unc_c2)
+            chist.SetBinError(4,Total_Unc_c3)
+            chist.SetFillColor(ROOT.kCyan)
 
-            bhist.SetBinContent(1,N_MC_b1)
-            bhist.SetBinContent(2,N_MC_b2)
-            bhist.SetBinContent(3,N_MC_b3)
-            bhist.SetBinError(1,Total_Unc_b1)
-            bhist.SetBinError(2,Total_Unc_b2)
-            bhist.SetBinError(3,Total_Unc_b3)
-            bhist.SetFillColor(ROOT.kRed+1)
+            bhist.SetBinContent(2,N_MC_b1)
+            bhist.SetBinContent(3,N_MC_b2)
+            bhist.SetBinContent(4,N_MC_b3)
+            bhist.SetBinError(2,Total_Unc_b1)
+            bhist.SetBinError(3,Total_Unc_b2)
+            bhist.SetBinError(4,Total_Unc_b3)
+            bhist.SetFillColor(ROOT.kMagenta)
 
-            lhist.SetBinContent(1,N_MC_l1)
-            lhist.SetBinContent(2,N_MC_l2)
-            lhist.SetBinContent(3,N_MC_l3)
-            lhist.SetBinError(1,Total_Unc_l1)
-            lhist.SetBinError(2,Total_Unc_l2)
-            lhist.SetBinError(3,Total_Unc_l3)
-            lhist.SetFillColor(ROOT.kGreen+1)
-            histoErr=chist.Clone()
-            histoErr.Add(bhist)
-            histoErr.Add(lhist)
+            lhist.SetBinContent(2,N_MC_l1)
+            lhist.SetBinContent(3,N_MC_l2)
+            lhist.SetBinContent(4,N_MC_l3)
+            lhist.SetBinError(2,Total_Unc_l1)
+            lhist.SetBinError(3,Total_Unc_l2)
+            lhist.SetBinError(4,Total_Unc_l3)
+            lhist.SetFillColor(ROOT.kYellow+1)
 
-            dhist.SetBinContent(1,N_Data_1)
-            dhist.SetBinContent(2,N_Data_2)
-            dhist.SetBinContent(3,N_Data_3)
-            dhist.SetBinError(1,stat_Unc_d1)
-            dhist.SetBinError(2,stat_Unc_d2)
-            dhist.SetBinError(3,stat_Unc_d3)
-            StackPre = ROOT.THStack("Stack","Pre-fit")
-            StackPre.Add(lhist)
-            StackPre.Add(bhist)
-            StackPre.Add(chist)
+            dhist.SetBinContent(2,N_Data_1)
+            dhist.SetBinContent(3,N_Data_2)
+            dhist.SetBinContent(4,N_Data_3)
+            dhist.SetBinError(2,stat_Unc_d1)
+            dhist.SetBinError(3,stat_Unc_d2)
+            dhist.SetBinError(4,stat_Unc_d3)
+            dhist.SetBinContent(7,N_Data_1)
+            dhist.SetBinContent(8,N_Data_2)
+            dhist.SetBinContent(9,N_Data_3)
+            dhist.SetBinError(7,stat_Unc_d1)
+            dhist.SetBinError(8,stat_Unc_d2)
+            dhist.SetBinError(9,stat_Unc_d3)
 
-            dhist.SetMarkerColor(ROOT.kBlack)
-            dhist.SetMarkerStyle(20)
-            dhist.SetMarkerSize(1.5)
-            dhist.SetLineColor(1)
 
-            legend = ROOT.TLegend(0.15, 0.75, 0.25, .89,"")
-            legend.SetFillStyle(0)
-            legend.SetTextSize(0.03)
-
-            legend.AddEntry(chist,"c","f")
-            legend.AddEntry(bhist,"b","f")
-            legend.AddEntry(lhist,"l","f")
-            legend.AddEntry(dhist,"Data","PL")
-
-            dMax = dhist.GetMaximum()
-
-            ratioPlot = ROOT.TRatioPlot(StackPre,dhist)
-
-            StackPre.SetMaximum(dMax*1.3)
-
-            StackPre.Draw("hist")
-#            ratioPlot.Draw()
-            histoErr.Draw("same e2")
-            dhist.Draw("same p e")
-            legend.Draw()
-
-            histoErr.SetFillColor(ROOT.kGray+3)
-            histoErr.SetLineColor(ROOT.kGray+3)
-            histoErr.SetMarkerSize(0)
-            histoErr.SetFillStyle(3013)
-
-            StackPre.GetXaxis().SetBinLabel(1,"W+b")
-            StackPre.GetXaxis().SetBinLabel(2,"W+c")
-            StackPre.GetXaxis().SetBinLabel(3,"DY+l")
 
             print SFs_result
             convergence_dict[(binx,biny)]["SFb"].append(SFs_result[0])
@@ -723,47 +721,107 @@ for directory in [i for i in subdirs]:
             print "Jet2: Corrected # MC: ", SFs_result[0]*N_MC_b2+SFs_result[1]*N_MC_c2+SFs_result[2]*N_MC_l2, "# Data: ", N_Data_2
             print "Jet3: Corrected # MC: ", SFs_result[0]*N_MC_b3+SFs_result[1]*N_MC_c3+SFs_result[2]*N_MC_l3, "# Data: ", N_Data_3
 
-            bhist2=bhist.Clone()
-            chist2=chist.Clone()
-            lhist2=lhist.Clone()
-            bhist2.Scale(SFs_result[0])
-            chist2.Scale(SFs_result[1])
-            lhist2.Scale(SFs_result[2])
-            histoErr2=chist2.Clone()
-            histoErr2.Add(bhist2)
-            histoErr2.Add(lhist2)
+            ROOT.TGaxis.SetMaxDigits(3)
+            chist.SetBinContent(7,N_MC_c1*SFs_result[1])
+            chist.SetBinContent(8,N_MC_c2*SFs_result[1])
+            chist.SetBinContent(9,N_MC_c3*SFs_result[1])
+            chist.SetBinError(7,Total_Unc_c1*SFs_result[1]**0.5)
+            chist.SetBinError(8,Total_Unc_c2*SFs_result[1]**0.5)
+            chist.SetBinError(9,Total_Unc_c3*SFs_result[1]**0.5)
 
-            chist2.SetFillColor(ROOT.kCyan+1)
-            bhist2.SetFillColor(ROOT.kRed+1)
-            lhist2.SetFillColor(ROOT.kGreen+1)
+            bhist.SetBinContent(7,N_MC_b1*SFs_result[0])
+            bhist.SetBinContent(8,N_MC_b2*SFs_result[0])
+            bhist.SetBinContent(9,N_MC_b3*SFs_result[0])
+            bhist.SetBinError(7,Total_Unc_b1*SFs_result[0]**0.5)
+            bhist.SetBinError(8,Total_Unc_b2*SFs_result[0]**0.5)
+            bhist.SetBinError(9,Total_Unc_b3*SFs_result[0]**0.5)
 
-            StackPost = ROOT.THStack("Post","Post-fit")
-            StackPost.Add(lhist2)
-            StackPost.Add(bhist2)
-            StackPost.Add(chist2)
+            lhist.SetBinContent(7,N_MC_l1*SFs_result[2])
+            lhist.SetBinContent(8,N_MC_l2*SFs_result[2])
+            lhist.SetBinContent(9,N_MC_l3*SFs_result[2])
+            lhist.SetBinError(7,Total_Unc_l1*SFs_result[2]**0.5)
+            lhist.SetBinError(8,Total_Unc_l2*SFs_result[2]**0.5)
+            lhist.SetBinError(9,Total_Unc_l3*SFs_result[2]**0.5)
 
-            StackPost.SetMaximum(dMax*1.3)
-            perfCanvas.cd(2)
-            StackPost.Draw("hist")
-            histoErr2.Draw("same e2")
+            histoErr=chist.Clone()
+            histoErr.Add(bhist)
+            histoErr.Add(lhist)
+
+            x1 = SFb_hist.GetXaxis().GetBinLowEdge(binx+1)
+            x2 = SFb_hist.GetXaxis().GetBinUpEdge(binx+1)
+            y1 = SFb_hist.GetYaxis().GetBinLowEdge(biny+1)
+            y2 = SFb_hist.GetYaxis().GetBinUpEdge(biny+1)
+
+            title=r"\text{CvsL} \in [%.1f,%.1f], \text{CvsB} \in [%.1f,%.1f]"%(x1,x2,y1,y2)
+            if x1<0:
+                title = "CvsL, CvsB = -1"
+
+            StackP = ROOT.THStack("Stack","")
+            StackP.Add(lhist)
+            StackP.Add(bhist)
+            StackP.Add(chist)
+
+            dhist.SetMarkerColor(ROOT.kBlack)
+            dhist.SetMarkerStyle(20)
+            dhist.SetMarkerSize(1.5)
+            dhist.SetLineColor(1)
+
+            legend = ROOT.TLegend(0.45, 0.75, 0.55, .89,"")
+            legend.SetFillStyle(1001)
+            legend.SetTextSize(0.03)
+
+            legend.AddEntry(chist,"c","f")
+            legend.AddEntry(bhist,"b","f")
+            legend.AddEntry(lhist,"l","f")
+            legend.AddEntry(dhist,"Data","PL")
+
+            dMax = dhist.GetMaximum()
+
+            # ratioPlot = ROOT.TRatioPlot(StackP,dhist)
+
+            StackP.SetMaximum(dMax*1.3)
+
+            StackP.Draw("hist")
+#            ratioPlot.Draw()
+            histoErr.Draw("same e2")
             dhist.Draw("same p e")
-            StackPost.GetXaxis().SetBinLabel(1,"W+b")
-            StackPost.GetXaxis().SetBinLabel(2,"W+c")
-            StackPost.GetXaxis().SetBinLabel(3,"DY+l")
 
-            histoErr2.SetFillColor(ROOT.kGray+3)
-            histoErr2.SetLineColor(ROOT.kGray+3)
-            histoErr2.SetMarkerSize(0)
-            histoErr2.SetFillStyle(3013)
+
+            histoErr.SetFillColor(ROOT.kGray+3)
+            histoErr.SetLineColor(ROOT.kGray+3)
+            histoErr.SetMarkerSize(0)
+            histoErr.SetFillStyle(3013)
+
+            StackP.GetXaxis().SetBinLabel(2,r"t\bar{t} (b)")
+            StackP.GetXaxis().SetBinLabel(3,"W+c")
+            StackP.GetXaxis().SetBinLabel(4,"DY+l")
+
+            StackP.GetXaxis().SetBinLabel(7,r"t\bar{t} (b)")
+            StackP.GetXaxis().SetBinLabel(8,"W+c")
+            StackP.GetXaxis().SetBinLabel(9,"DY+l")
+
+            StackP.GetXaxis().SetLabelSize(0.05)
+            StackP.GetYaxis().SetTitle("Events")
+
+            vLine = ROOT.TLine()
+            vLine.SetLineWidth(1)
+            vLine.DrawLineNDC(0.5,0.1,0.5,0.9)
+            legend.Draw()
+
+            titleText=ROOT.TLatex()
+            titleText.SetTextSize(0.045)
+            titleText.SetTextAlign(22)
+            titleText.DrawLatexNDC(0.3,0.85, "Pre-fit")
+            titleText.DrawLatexNDC(0.7,0.85, "Post-fit")
+            headText=ROOT.TLatex()
+            headText.SetTextSize(0.05)
+            headText.SetTextAlign(21)
+            headText.DrawLatexNDC(0.5,0.92, title)
 
             perfCanvas.SaveAs(current_dir+"/fitPlots/fitPlot"+str(binx)+"_biny_"+str(biny)+".png")
             ROOT.gPad.SetLogy()
-            StackPost.SetMinimum(11)
-            StackPost.SetMaximum(dMax*5)
-            perfCanvas.cd(1)
-            ROOT.gPad.SetLogy()
-            StackPre.SetMaximum(dMax*5)
-            StackPre.SetMinimum(11)
+            StackP.SetMaximum(dMax*5)
+            StackP.SetMinimum(101)
             perfCanvas.SaveAs(current_dir+"/fitPlots/fitPlot_log_"+str(binx)+"_biny_"+str(biny)+".png")
 
 
@@ -909,7 +967,7 @@ for directory in [i for i in subdirs]:
     SFb_hist.GetZaxis().SetTitleSize(0.05)
     SFb_hist.GetZaxis().SetTitleOffset(1.2)
     SFb_hist.Draw("COLZ TEXT E")
-    box = ROOT.TPaveText(0.,1,1,1.15)
+    box = ROOT.TPaveText(custom_bins_CvsB_jet1[0],1,1,1+.15*(custom_bins_CvsB_jet1[-1]-custom_bins_CvsB_jet1[0]))
     box.SetBorderSize(1)
     box.SetFillStyle(0)
     box.Draw("same")
@@ -1033,18 +1091,18 @@ for directory in [i for i in subdirs]:
 
     outf = ROOT.TFile(current_dir+"/cTag_SFs_80X_Spandan.root","RECREATE")
     outf.cd()
-    
-    if skip1bins:    
+
+    if skip1bins:
         for binx in range(histo_dict["jet1"]["b"].GetNbinsX()):
             for biny in range(histo_dict["jet1"]["b"].GetNbinsY()):
                 if (binx==0 or biny==0) and not (binx==0 and biny==0):
-                    SFl_hist.SetBinContent(binx+1,biny+1,SFl_hist.GetBinContent(1,1))                    
+                    SFl_hist.SetBinContent(binx+1,biny+1,SFl_hist.GetBinContent(1,1))
                     SFb_hist.SetBinContent(binx+1,biny+1,SFb_hist.GetBinContent(1,1))
                     SFc_hist.SetBinContent(binx+1,biny+1,SFc_hist.GetBinContent(1,1))
                     SFl_hist.SetBinError(binx+1,biny+1,SFl_hist.GetBinError(1,1))
                     SFb_hist.SetBinError(binx+1,biny+1,SFb_hist.GetBinError(1,1))
                     SFc_hist.SetBinError(binx+1,biny+1,SFc_hist.GetBinError(1,1))
-                    
+
         for binx in range(histo_dict["jet1"]["b"].GetNbinsX()+1):
             SFl_hist.SetBinContent(binx,0,SFl_hist.GetBinContent(1,1))
             SFb_hist.SetBinContent(binx,0,SFb_hist.GetBinContent(1,1))
@@ -1062,7 +1120,7 @@ for directory in [i for i in subdirs]:
     SFl_hist.Write()
     SFb_hist.Write()
     SFc_hist.Write()
-        
+
     outf.Close()
 
 
@@ -1137,7 +1195,7 @@ for directory in [i for i in subdirs]:
         hist.GetZaxis().SetTitleSize(0.05)
         hist.GetZaxis().SetTitleOffset(1.2)
         hist.Draw("COLZ TEXT E")
-        box = ROOT.TPaveText(0.,1,1,1.15)
+        box = ROOT.TPaveText(custom_bins_CvsB_jet1[0],1,1,1+.15*(custom_bins_CvsB_jet1[-1]-custom_bins_CvsB_jet1[0]))
         box.SetBorderSize(1)
         box.SetFillStyle(0)
         box.Draw("same")
@@ -1158,5 +1216,17 @@ for directory in [i for i in subdirs]:
     saveHist(chi2c_hist,"chi2c")
     saveHist(chi2l_hist,"chi2l")
     saveHist(chi2_hist,"chi2")
+
+    hor=600
+    ver=600
+    result = Image.new("RGB", (hor*5, ver*5), color=(255,255,255,0))
+    for i in range(1,6):
+        for j in range(1,6):
+            img = Image.open(current_dir+"/fitPlots/fitPlot_log_%d_biny_%d.png"%(i,j))
+    #            img.thumbnail((hor, ver), Image.ANTIALIAS)
+            x = (i-1)*hor
+            y = (5-j)*ver
+            result.paste(img, (x, y))
+    result.save(current_dir+"/fitPlots/fitPlot_log_grid.png")
 
 sys.exit(len(boxesb)+len(boxesc)+len(boxesl))
