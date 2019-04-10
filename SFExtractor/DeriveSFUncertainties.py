@@ -17,6 +17,8 @@ from copy import deepcopy
 from binning import *
 from array import array
 from tabulate import tabulate
+from matplotlib import pyplot as plt
+from PIL import Image
 
 skip1bins=True
 
@@ -88,6 +90,11 @@ systContrib = {}
 totalcount = 0.
 diff_histos = {}
 
+binwiseUncCont = {}
+binwiseUncCont['b'] = {}
+binwiseUncCont['c'] = {}
+binwiseUncCont['l'] = {}
+
 for systdir in sorted(systdirs):
     currentdir = basedir + "/" + systdir
     tmp_file_ = ROOT.TFile(currentdir+"/cTag_SFs_80X_Spandan.root")
@@ -132,9 +139,17 @@ for systdir in sorted(systdirs):
 
     upcount = 0.
     downcount = 0.
+    
+    systname=''.join(systdir.split('_')[2:])
+    for flav in ['b','c','l']:
+        binwiseUncCont[flav][systname]={}
 
     for binx in range(-1,diff_SFb.GetNbinsX()):
         for biny in range(-1,diff_SFb.GetNbinsY()):
+            
+            binwiseUncCont['b'][systname][(binx+1,biny+1)] = abs(diff_SFb.GetBinContent(binx+1,biny+1))
+            binwiseUncCont['c'][systname][(binx+1,biny+1)] = abs(diff_SFc.GetBinContent(binx+1,biny+1))
+            binwiseUncCont['l'][systname][(binx+1,biny+1)] = abs(diff_SFl.GetBinContent(binx+1,biny+1))
 
             if diff_SFb.GetBinContent(binx+1,biny+1) > 0:
                 old_bin_content_SFbUp = SFb_histUp.GetBinContent(binx+1,biny+1)
@@ -690,3 +705,110 @@ SFc_histDown_absolute.Write()
 SFl_histDown_absolute.Write()
 #outfileDown.Close()
 central_SF_file.Close()
+
+# ======== Bin-wise contribution of each systematic to uncertainties =========
+
+os.system("mkdir -p "+basedir+"/"+centraldir+"/UncContribPlots/")
+
+for flav in ['b','c','l']:
+    for binx in range(1,SFb_histCentral.GetNbinsX()+1):
+        for biny in range(1,SFb_histCentral.GetNbinsY()+1):
+            
+            def getSummedUncs(systlist,caps=False):
+                Err = 0.
+                direcs=['up','down']
+                if caps: direcs=['Up','Down']
+                for syst in systlist:
+                    for direc in direcs:
+                        Err += binwiseUncCont[flav][syst+direc][(binx,biny)]**2
+                return Err #**0.5
+            
+            statMCErr = getSummedUncs(['MCStat'])
+            statdataErr = getSummedUncs(['dataStat'])
+            XSecDYErr = getSummedUncs(['XSecDY'])
+            XSecSTErr = getSummedUncs(['XSecST'])
+            XSecTTErr = getSummedUncs(['XSecTT'])
+            XSecVVErr = getSummedUncs(['XSecVV'])
+            XSecWErr = getSummedUncs(['XSecW'])
+            lepIDErr = getSummedUncs(['EleIDSF','MuIDSF'])
+            JECErr = getSummedUncs(['jer','jesTotal'],True)
+            LHEErr = getSummedUncs(['LHEScaleWeightmuF','LHEScaleWeightmuR'])
+            PUErr = getSummedUncs(['PUWeight'])            
+                        
+            XSecErr = XSecDYErr+XSecSTErr+XSecTTErr+XSecVVErr+XSecWErr
+            StatErr = statMCErr+statdataErr
+            SystErr = lepIDErr + JECErr+ LHEErr+PUErr
+            sumErr = (statMCErr+statdataErr+XSecErr+lepIDErr+JECErr+LHEErr+PUErr)/100            
+            if sumErr==0.: continue            
+#            print binx,biny, statMCErr/sumErr, statdataErr/sumErr, XSecErr/sumErr, lepIDErr/sumErr, JECErr/sumErr, LHEErr/sumErr, PUErr/sumErr
+            XSecErr /= sumErr
+            StatErr /= sumErr
+            SystErr /= sumErr
+            
+            threshold = 2
+            custlabel=[]
+            if StatErr>threshold:
+                custlabel.append("Stat.")
+            else:
+                custlabel.append("")
+            if XSecErr>threshold:
+                custlabel.append("XSec")
+            else:
+                custlabel.append("")
+            if SystErr>threshold:
+                custlabel.append("Syst.")
+            else:
+                custlabel.append("")
+            
+            fig, ax = plt.subplots(figsize=(5,5))
+            
+            size = 0.4
+            vals = [[statMCErr,statdataErr], [XSecDYErr,XSecSTErr,XSecTTErr,XSecVVErr,XSecWErr], [lepIDErr, JECErr, LHEErr, PUErr]]
+            
+            flatvals=[i/sumErr for sub in vals for i in sub]
+            
+            flatlabels=["MC","Data","DY","ST","TT","VV","W","lepID","JEC","LHE","PU"]
+            printlabels=[]
+            for i,val in enumerate(flatvals):
+                if val > 5:
+                    printlabels.append(flatlabels[i])
+                else:
+                    printlabels.append("")
+
+            cmap1 = plt.get_cmap("Reds")
+            cmap2 = plt.get_cmap("Greens")
+            cmap3 = plt.get_cmap("Blues")
+            outer_colors = [cmap1(200),cmap2(200),cmap3(200)]
+            inner_colors = [cmap1(100), cmap1(150),     cmap2(50),cmap2(80),cmap2(110),cmap2(140),cmap2(170),     cmap3(40), cmap3(80),cmap3(120),cmap3(160)]
+            wedges, texts = ax.pie([sum(elem)/sumErr for elem in vals], radius=1, colors=outer_colors,
+                   wedgeprops=dict(width=size, edgecolor='w'), labels=custlabel, labeldistance=1.05)
+
+            wedges2, texts2 = ax.pie(flatvals, radius=(1-size), colors=inner_colors,
+                   wedgeprops=dict(width=size, edgecolor='w'), labels=printlabels, labeldistance=0.7)
+                   
+            x1 = SFb_histCentral.GetXaxis().GetBinLowEdge(binx)
+            x2 = SFb_histCentral.GetXaxis().GetBinUpEdge(binx)
+            y1 = SFb_histCentral.GetYaxis().GetBinLowEdge(biny)
+            y2 = SFb_histCentral.GetYaxis().GetBinUpEdge(biny)
+            tit=r'$\mathrm{SF}_{%s}$: CvsL $\in$ [%.1f,%.1f], CvsB $\in$ [%.1f,%.1f]'%(flav,x1,x2,y1,y2)
+            if binx==1: tit = "CvsX = -1"
+
+            ax.set(aspect="equal", title=tit)
+            plt.setp(texts, size=15, weight="bold")
+            plt.setp(texts2, size=10, ha="center", va="center", rotation_mode = 'anchor')
+            plt.tight_layout()
+            plt.savefig(basedir+"/"+centraldir+"/UncContribPlots/flav-%s-binx-%d-biny-%d.png"%(flav,binx,biny))
+            plt.close()
+            
+    hor=500
+    ver=500
+    result = Image.new("RGB", (hor*5, ver*5))#, color=(255,255,255,0))
+    for i in range(1,6):
+        for j in range(1,6):
+            img = Image.open(basedir+"/"+centraldir+"/UncContribPlots/flav-%s-binx-%d-biny-%d.png"%(flav,i+1,j+1))
+    #            img.thumbnail((hor, ver), Image.ANTIALIAS)
+            x = (i-1)*hor
+            y = (5-j)*ver
+            result.paste(img, (x, y))
+    result.save(basedir+"/"+centraldir+"/UncContribPlots/grid-flav-%s.png"%flav)
+
