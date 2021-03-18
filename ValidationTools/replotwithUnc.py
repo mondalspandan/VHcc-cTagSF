@@ -11,22 +11,23 @@ inDir=sys.argv[1]
 subdirs = [i for i in os.listdir(inDir) if "compare" not in i]
 
 def getName(fl):
-    if 'is_E_' in fl and 'nJet_0-4' in fl:
-        return "W+c(e)"
-    elif 'is_M_' in fl and 'nJet_0-4' in fl:
-        return "W+c(mu)"
-    elif 'is_E_' in fl and 'nJet_5-' in fl:
-        return "TT(e)"
-    elif 'is_M_' in fl and 'nJet_5-' in fl:
-        return "TT(mu)"
-    elif 'is_ME_' in fl:
-        return "TT(mue)"
-    elif 'is_MM_' in fl:
-        return "TT(mumu)"
-    elif 'is_EE_' in fl:
-        return "TT(ee)"
-    else:
-        return "DY"
+#    if 'is_E_' in fl and 'nJet_0-4' in fl:
+#        return "W+c(e)"
+#    elif 'is_M_' in fl and 'nJet_0-4' in fl:
+#        return "W+c(mu)"
+#    elif 'is_E_' in fl and 'nJet_5-' in fl:
+#        return "TT(e)"
+#    elif 'is_M_' in fl and 'nJet_5-' in fl:
+#        return "TT(mu)"
+#    elif 'is_ME_' in fl:
+#        return "TT(mue)"
+#    elif 'is_MM_' in fl:
+#        return "TT(mumu)"
+#    elif 'is_EE_' in fl:
+#        return "TT(ee)"
+#    else:
+#        return "DY"
+    return ''.join(fl.split('/')[-1].split('_')[:2])
 
 SFNames = {}
 

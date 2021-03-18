@@ -1,5 +1,5 @@
 ####################################################
-#   Stack Plotting Tool for c-tagging SF Measurement
+#   Stack Plotting Tool v2 for c-tagging SF Measurement
 #   By Spandan Mondal
 #   RWTH Aachen University, Germany
 #   CMS Experiment, CERN
@@ -7,32 +7,69 @@
 ####################################################
 
 from ROOT import *
-import os, sys
+import ROOT
+import os, sys, json
 #from VHcc_Weights import eff_xsec
 from array import array
 gROOT.SetBatch(True)
 gStyle.SetOptStat(0)
 gStyle.SetLegendBorderSize(0)
+from samplesDict import *
+
+TH1DModel = ROOT.RDF.TH1DModel
 
 lumi = 35900
 # outDir="Plots_190116_3mva80rewt_OS-SS_MuPtJetPtRatioCut_noQCD_RelIso_hardLepJetPtRatio_dxyz_sip3d_nJet/"
-outDir="Plots_190220_ReWeighted_2"
+outDir="Plots_20201030_test"
 # outDir="Plots_190124_Test"
 yTitle="Events"
 MCWeightName="eventWeight"          #"genWeight"      #
 DataWeightName="eventWeight"        #   "eventWeight"
-rootPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190228_pt20/"
+rootPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190805_2017_Wc/"
 useQCD = False
 moreQCD = False
 testMode = False
+splitbypT = True
+
+splitDYbyHT = False
+splitWbynJets = False
+
+taggerPref = ""
+makeBinWtTxt = False
+CvLTxtBinning = [-1.,0,.2,.4,.6,.8,1.]
+CvBTxtBinning = [-1.,0,.2,.4,.6,.8,1.]
+
+
+gInpFunc = '''int getBJetIdx(ROOT::VecOps::RVec<double> DiscCvsB, int muJetIdx) {
+    auto vec = DiscCvsB;
+    vec.erase(vec.begin() + muJetIdx);
+    return std::min_element(vec.begin(),vec.end()) - vec.begin();  //index of the jet with lowest DiscCvsB value
+}
+int getCJetIdx(ROOT::VecOps::RVec<double> DiscCvsB, ROOT::VecOps::RVec<double> DiscCvsL, int muJetIdx) {
+    auto bjetidx = getBJetIdx(DiscCvsB,muJetIdx);
+
+    int maxidx = 0, itn = 0;
+    double maxval = -1;
+    for(auto it = std::begin(DiscCvsL); it != std::end(DiscCvsL); ++it) {
+        if (itn == muJetIdx || itn == bjetidx) { itn++; continue; }
+        if (*it > maxval) {
+            maxval = *it;
+            maxidx = itn;
+        }
+        itn++;
+    }
+    return maxidx;  //index of the jet with highest DiscCsvL value
+}
+'''
+# gInterpreter.Declare(gInpFunc)
 
 def getbrText(brName):
-    if type(brName) is str:
+    if not '[' in brName:
         return brName
     else:
-        return brName[0] + "_" + str(brName[1])
+        return brName.replace('[','_').rstrip(']')
 
-def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selections="",cuts=[], divideByFlav=False, brName2D="",nbins2=5,start2=0,end2=1,varBin1=[],varBin2=[],makeCustomH=False):
+def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selections="", divideByFlav=False, brName2D="",nbins2=5,start2=0,end2=1,varBin1=[],varBin2=[],getSFUnc=False):
     if "|" in dir:                      # dir can be one directory string, or dir = "dir1|dir2|dir3|..."
         dirList = dir.split("|")
     else:
@@ -44,6 +81,7 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     myChain = TChain(treeName)
     nTotalEvents = 0
     for fl in rootFiles:
+#        if "Run2018A" in fl or "Run2018B" in fl or "Run2018C" in fl: continue
         iF = TFile.Open(fl)
         if bool(iF) == False or iF.IsZombie():
             print "Error in file %s, skipping."%fl
@@ -54,317 +92,470 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
         iF.Close()
         if testMode: break
 
-    nEntries = myChain.GetEntries()
-
     brText = getbrText(brName)
     if brLabel == "": brLabel = brText
 
-    # if makeCustomH:
-    #     customHisto = TH2Poly()
-    #     customHisto.AddBin(0.,0.,.2,.2)
-    #     customHisto.AddBin(0.2,0.,.4,.2)
-    #     customHisto.AddBin(0.4,0.,.6,.2)
-    #     customHisto.AddBin(0.6,0.,1.,.2)
-    #
-    #     customHisto.AddBin(0.,0.2,.2,.4)
-    #     customHisto.AddBin(0.2,0.2,.4,.4)
-    #     customHisto.AddBin(0.4,0.2,.6,.4)
-    #
-    #     customHisto.AddBin(0.,0.4,.2,.6)
-    #     customHisto.AddBin(0.2,0.4,.4,.6)
-    #     customHisto.AddBin(0.4,0.4,.6,.6)
-    #
-    #     customHisto.AddBin(0.6,0.2,1.,.6)
-    #
-    #     customHisto.AddBin(0.,0.6,.2,.8)
-    #     customHisto.AddBin(0.,0.8,.2,1.)
-    #
-    #     customHisto.AddBin(0.2,0.6,.6,1.)
-    #     customHisto.AddBin(0.6,0.6,1.,1.)
-
     blankArray=array('d',[])
-    if not divideByFlav:
-        if brName2D == "" and not makeCustomH:
-            myHisto = TH1F(brText+dir,brLabel,nbins,start,end)
-        # elif makeCustomH:
-        #     myHisto = customHisto.Clone()
-        #     myHisto.SetNameTitle(brText+dir,brLabel)
-        else:
-            if varBin1==blankArray and varBin2==blankArray:
-                myHisto = TH2F(brText+dir,brLabel,nbins,start,end,nbins2,start2,end2)
-            elif varBin1!=blankArray and varBin2==blankArray:
-                myHisto = TH2F(brText+dir,brLabel,nbins,varBin1,nbins2,start2,end2)
-            elif varBin1==blankArray and varBin2!=blankArray:
-                myHisto = TH2F(brText+dir,brLabel,nbins,start,end,nbins2,varBin2)
-            else:
-                myHisto = TH2F(brText+dir,brLabel,nbins,varBin1,nbins2,varBin2)
-        myHisto.Sumw2()
-    else:
-        myHisto=[]
-        for idx in range(4):
-            if brName2D == "" and not makeCustomH:
-                myHisto.append(TH1F(brText+dir+str(idx),brLabel,nbins,start,end))
-            # elif makeCustomH:
-            #     myHisto.append(customHisto.Clone())
-            #     myHisto[idx].SetNameTitle(brText+dir+str(idx),brLabel)
-            else:
-                if varBin1==blankArray and varBin2==blankArray:
-                    myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,start,end,nbins2,start2,end2))
-                elif varBin1!=blankArray and varBin2==blankArray:
-                    myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,varBin1,nbins2,start2,end2))
-                elif varBin1==blankArray and varBin2!=blankArray:
-                    myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,start,end,nbins2,varBin2))
-                else:
-                    myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,varBin1,nbins2,varBin2))
-            myHisto[idx].Sumw2()
-
-    for iEvent in range(nEntries):
-        if iEvent > 0 and iEvent%1000000 == 0: print "Processed %d of %d events in %s."%(iEvent,nEntries,dir)
-        myChain.GetEntry(iEvent)
-
-        # =========== Function to read specified leaf ===========
-        def parseBrStr(input):
-            '''
-                input == string             : load tree->string
-                input == [string,int]       : load tree->string[int]
-                input == [string1,string2]  : load tree->string1[tree->string2]
-            '''
-            if type(input) is str:
-                if input == "M_ip3derror":          # Add customized calculations on variables here
-                    return parseBrStr(["M_ip3d",0])/parseBrStr(["M_sip3d",0])
-                elif input == "E_ip3derror":
-                    return parseBrStr(["E_ip3d",0])/parseBrStr(["E_sip3d",0])
-                return myChain.__getattr__(input)
-            elif type(input) is list:
-                vectorBr = list(myChain.__getattr__(input[0]))
-                vecIdx = input[1]
-                if type(vecIdx) is int:
-                    if "Cvs" in input[0] and vectorBr[vecIdx] < 0.: return -0.1
-                    return vectorBr[vecIdx]
-                elif type(vecIdx) is str:
-                    if "Cvs" in input[0] and vectorBr[ int(myChain.__getattr__(vecIdx)) ] < 0.: return -0.1
-                    return vectorBr[ int(myChain.__getattr__(vecIdx)) ]
-                else:
-                    raise ValueError
-            else:
-                raise ValueError
-        # ------------------------------------------------------------
-
-        if weightName == "":
-            eventWeight = 1.
-        elif "/" in weightName:
-            eventWeight = myChain.__getattr__(weightName.split('/')[0])/myChain.__getattr__(weightName.split('/')[1])
-        elif "*" in weightName:
-            eventWeight = 1.
-            for wt in weightName.split('*'):
-                eventWeight *= myChain.__getattr__(wt)
-        else:
-            eventWeight = myChain.__getattr__(weightName)
-
-
-        if not selections == "":
-            keepEvent = True
-            for iSel, selection in enumerate(selections):
-                sel  = parseBrStr(selection)
-                if len(cuts[iSel]) == 2:
-                    discardBool = sel < cuts[iSel][0] or sel > cuts[iSel][1]
-                elif len(cuts[iSel]) > 2:
-                    discardBool = sel > cuts[iSel][0] and sel < cuts[iSel][1]
-                else:
-                    raise ValueError
-                if discardBool:
-                    keepEvent = False
-                    break
-            if not keepEvent: continue
-
-        # =========== Divide WJets according to jet flavour =======
-        '''
-            myHisto[0]: c jets
-            myHisto[1]: c jet + c jet
-            myHisto[2]: uds jets
-            myHisto[3]: b jets
-        '''
-        if divideByFlav:
-            hFlv = list(myChain.__getattr__("jet_hadronFlv"))
-            iJet = int(myChain.__getattr__("muJet_idx"))
-            if iJet < 0: iJet = 0
-            numOf_cJet = int(myChain.__getattr__("numOf_cJet"))
-            flv = hFlv[iJet]
-            if flv==5:
-                histoIdx = 3
-            elif flv==4:
-                if numOf_cJet%2 == 0:
-                    histoIdx = 1
-                else:
-                    histoIdx = 0
-            else:
-                histoIdx = 2
-        # ---------------------------------------------------------
-
-        # # ====== Extract HT bins from inclusive samples =======
-        # if "JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" in dir:      # or "DYJetsToLL_M-50_TuneCUETP8M1_13TeV-" in dir:
-        #     LHE_HT = float(myChain.__getattr__("LHE_HT"))
-        #     if LHE_HT > 100: continue
-        # # -----------------------------------------------------
-
-#       ====== Extract nGenJets from inclusive sample =======
-        if "WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8" in dir:
-            LHE_Njets = float(myChain.__getattr__("LHE_Njets"))
-            if LHE_Njets > 0 and LHE_Njets < 5: continue
-       # -----------------------------------------------------
-
-        brVal = parseBrStr(brName)
-        # print brVal, dir
-
-        if reWeight and divideByFlav:
-            ctagWt = 1.
-            for iJ in range(int(parseBrStr("jet_nJet"))):
-                CvsLval = parseBrStr(["jet_CvsL",iJ])
-                CvsBval = parseBrStr(["jet_CvsB",iJ])
-                if False: #CvsLval < 0. or CvsBval < 0:
-                    ctagWt *= 1.
-                else:
-#                    ctagWtOld = ctagWt
-                    flav = int(parseBrStr(["jet_hadronFlv",iJ]))
-                    xbin = cWtHist.GetXaxis().FindBin(CvsLval)
-                    ybin = cWtHist.GetYaxis().FindBin(CvsBval)
-                    if flav == 4:
-                        ctagWt *= cWtHist.GetBinContent(xbin,ybin)
-                    elif flav == 5:
-                        ctagWt *= bWtHist.GetBinContent(xbin,ybin)
-                    else:
-                        ctagWt *= lWtHist.GetBinContent(xbin,ybin)
-#                    if CvsLval < 0.: print CvsLval, CvsBval, ctagWt/ctagWtOld 
-            eventWeight *= ctagWt
-        
-        
-        if brName2D == "":
-            if not divideByFlav:
-                myHisto.Fill(brVal,eventWeight)
-            else:
-                myHisto[histoIdx].Fill(brVal,eventWeight)
-        else:
-            brVal2 = parseBrStr(brName2D)
-            # =============== Treating ==1 bins ==================
-            if brName[0] == "jet_CvsL" and brName2D[0] == "jet_CvsB":
-                if brVal >= 1.:
-                    brVal = 0.99999
-                if brVal2 >= 1.:
-                    brVal2 = 0.99999
-#                if brVal < 0:
-#                    brVal = 0.001
-#                if brVal2 < 0:
-#                    brVal2 = 0.001
-            # ===================================================        
-            if not divideByFlav:
-                myHisto.Fill(brVal,brVal2,eventWeight)
-            else:
-                myHisto[histoIdx].Fill(brVal,brVal2,eventWeight)
-
-    print dir, nTotalEvents
-    return myHisto, nTotalEvents
-
-def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makeROOT=False,noRatio=False,makeCustomH=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",drawDataMCRatioLine=False,normTotalMC=False):
+    #if not divideByFlav:
+        #if brName2D == "" and not makeCustomH:
+            #myHisto = TH1F(brText+dir,brLabel,nbins,start,end)
+        ## elif makeCustomH:
+        ##     myHisto = customHisto.Clone()
+        ##     myHisto.SetNameTitle(brText+dir,brLabel)
+        #else:
+            #if varBin1==blankArray and varBin2==blankArray:
+                #myHisto = TH2F(brText+dir,brLabel,nbins,start,end,nbins2,start2,end2)
+            #elif varBin1!=blankArray and varBin2==blankArray:
+                #myHisto = TH2F(brText+dir,brLabel,nbins,varBin1,nbins2,start2,end2)
+            #elif varBin1==blankArray and varBin2!=blankArray:
+                #myHisto = TH2F(brText+dir,brLabel,nbins,start,end,nbins2,varBin2)
+            #else:
+                #myHisto = TH2F(brText+dir,brLabel,nbins,varBin1,nbins2,varBin2)
+        #myHisto.Sumw2()
+    #else:
+        #myHisto=[]
+        #for idx in range(4):
+            #if brName2D == "" and not makeCustomH:
+                #myHisto.append(TH1F(brText+dir+str(idx),brLabel,nbins,start,end))
+            ## elif makeCustomH:
+            ##     myHisto.append(customHisto.Clone())
+            ##     myHisto[idx].SetNameTitle(brText+dir+str(idx),brLabel)
+            #else:
+                #if varBin1==blankArray and varBin2==blankArray:
+                    #myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,start,end,nbins2,start2,end2))
+                #elif varBin1!=blankArray and varBin2==blankArray:
+                    #myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,varBin1,nbins2,start2,end2))
+                #elif varBin1==blankArray and varBin2!=blankArray:
+                    #myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,start,end,nbins2,varBin2))
+                #else:
+                    #myHisto.append(TH2F(brText+dir+str(idx),brLabel,nbins,varBin1,nbins2,varBin2))
+            #myHisto[idx].Sumw2()
     
+    DF = ROOT.RDataFrame(myChain)
+    
+    if brName2D == "":
+        histoModel = TH1DModel(brText+dir,brLabel,nbins,start,end)
+    
+    if weightName == "":
+        eventWeight = 1.
+    else:
+        if 'TTTo' not in dir and 'PSWeight' in weightName:
+            eventWeight = weightName.split('*')[0]
+        else:
+            eventWeight = weightName
+    DF = DF.Define("newWeight",eventWeight)
+    
+    sampSels = ""
+    if splitDYbyHT and "DYJetsToLL_M-50_Tune" in dir:   sampSels += " && LHE_HT < 100"
+    if splitWbynJets and "WJetsToLNu_Tune" in dir:      sampSels += " && (LHE_Njets < 1 || LHE_Njets > 4)"
+    
+    if "Cvs" in brName:
+        newbrexp = "max(min(%s,0.999999),-0.1)"%(brName)
+        DF = DF.Define("newBr",newbrexp)
+        newBr = "newBr"
+    else:
+        DF = DF.Define("newBr",brName)
+        newBr = "newBr"        
+    
+    if reWeight and divideByFlav:
+        DF = DF.Define("newWeight2",
+                       '''  float ctagWt = 1.;
+                            int flav, xbin, ybin;
+                            float CvsLval,CvsBval,jetpT;
+                            TH2F *wtHist;
+                            for (int ij=0; ij<jet_nJet;ij++) {
+                                //if (ij==muJet_idx) continue;
+                                flav = int(jet_hadronFlv[ij]);
+                                CvsLval = jet_%sCvsL[ij];
+                                CvsBval = jet_%sCvsB[ij];
+                                jetpT = jet_Pt[ij];
+                                if (flav == 4) {
+                                    if (splitbypT) {
+                                        if (jetpT < 40)  wtHist = cWtHist_below40;
+                                        else wtHist = cWtHist_above40;
+                                    }
+                                    else {
+                                        wtHist = cWtHist;
+                                    }
+                                }
+                                else if (flav == 5) {
+                                    if (splitbypT) {
+                                        if (jetpT < 40)  wtHist = bWtHist_below40;
+                                        else wtHist = bWtHist_above40;
+                                    }
+                                    else {
+                                        wtHist = bWtHist;
+                                    }
+                                }
+                                else {
+                                    if (splitbypT) {
+                                        if (jetpT < 40)  wtHist = lWtHist_below40;
+                                        else wtHist = lWtHist_above40;
+                                    }
+                                    else {
+                                        wtHist = lWtHist;
+                                    }
+                                }
+                                
+                                xbin = wtHist->GetXaxis()->FindBin(CvsLval);
+                                ybin = wtHist->GetYaxis()->FindBin(CvsBval);
+                                ctagWt *= wtHist->GetBinContent(xbin,ybin);
+                            }
+                            return newWeight*ctagWt;
+                       '''%(taggerPref,taggerPref)
+                       )
+    else:
+        DF = DF.Define("newWeight2","newWeight")
+    
+    if divideByFlav:
+        myHisto = []
+        if "jet_" in brName and '[' in brName:
+            jetind = brName.split('[')[1].split(']')[0]
+        else:
+            jetind = "max(0.,muJet_idx)"
+        for flav, hadflav in [('c',4),('b',5),('uds',0),('lep',0)]:
+            flavSel = " && jet_hadronFlv[%s] == %d"%(jetind,hadflav)
+            if flav == 'uds':
+                flavSel += " && jet_isHardLep[%s] == 0"%jetind
+            elif flav == 'lep':
+                flavSel += " && jet_isHardLep[%s] == 1"%jetind
+                
+            #flavSel = " && ( (muJet_idx < 0 && jet_hadronFlv[0] == %d) || (muJet_idx >= 0 && jet_hadronFlv[muJet_idx] == %d))"%(hadflav,hadflav)
+            #if flav == 'uds':
+                #flavSel += " && ( (muJet_idx < 0 && jet_isHardLep[0] == 0) || (muJet_idx >= 0 && jet_isHardLep[muJet_idx] == 0) )"
+            #elif flav == 'lep':
+                #flavSel += " && ( (muJet_idx < 0 && jet_isHardLep[0] == 1) || (muJet_idx >= 0 && jet_isHardLep[muJet_idx] == 1) )"
+
+            thisflavDF = DF.Filter(selections + sampSels + flavSel)    
+            myHisto.append( thisflavDF    \
+                            .Histo1D(   histoModel,
+                                        newBr,
+                                        "newWeight2"
+                                    )
+                            )
+            if getSFUnc:
+                flName = dir.split('/')[-1]
+                thisflavDF.Snapshot("Events","StackerTemp.root")
+                tempf = TFile("StackerTemp.root","READ")
+                temptree = tempf.Get("Events")
+                if "muJet_idx==0?1:0" in jetind:
+                    txtind = '1 if int(ev.muJet_idx) == 0 else 0'
+                elif jetind.isdigit(): txtind = str(jetind)
+                else: txtind = "ev."+str(jetind)
+                for ev in temptree:
+                    exec("indtxt = int(%s)"%txtind)
+                    # print indtxt
+                    exec("flav2 = ev.jet_hadronFlv[%s]"%indtxt)
+                    exec("CvsBval = ev.jet_%sCvsB[%s]"%(taggerPref,indtxt))
+                    exec("CvsLval = min(ev.jet_%sCvsL[%s],0.99999)"%(taggerPref,indtxt))
+                    exec("xaxisval = ev.jet_%sCvs%s[%s]"%(taggerPref,("L" if "CvsL" in brName else "B"),indtxt))
+                    oldwt = ev.newWeight2
+                    if flav2 == 4:
+                        wtHist = ROOT.cWtHist
+                        wtHistUp = ROOT.cWtHistStatUp
+                    elif flav2 == 5:
+                        wtHist = ROOT.bWtHist
+                        wtHistUp = ROOT.bWtHistStatUp
+                    else:
+                        wtHist = ROOT.lWtHist
+                        wtHistUp = ROOT.lWtHistStatUp
+
+                    binidx = SFUnc.GetXaxis().FindBin(xaxisval)
+                    xbin = wtHist.GetXaxis().FindBin(CvsLval)
+                    ybin = wtHist.GetYaxis().FindBin(CvsBval)   
+                    ctagWt = wtHist.GetBinContent(xbin,ybin)
+                    ctagWtUp = wtHistUp.GetBinContent(xbin,ybin)
+                    # if ctagWt > 0:                        
+                    #     statUnc = (ctagWtUp - ctagWt)/ctagWt*abs(oldwt)
+                    # else:
+                    #     print "** Found weird ctagWt = %f, for CvsB = %f and CvsL = %f."%(ctagWt,CvsBval,CvsLval)
+                    #     statUnc = abs(oldwt)
+
+                    thisKey = (flav2,ctagWt,ctagWtUp)
+                    if thisKey not in SFBinCounts:
+                        SFBinCounts[binidx][thisKey] = {}
+                    if flName in SFBinCounts[binidx][thisKey]:
+                        SFBinCounts[binidx][thisKey][flName] += oldwt
+                    else:
+                        SFBinCounts[binidx][thisKey][flName] = oldwt
+
+                    if binidx == 18: print thisKey,oldwt,CvsBval,CvsLval 
+                tempf.Close()
+                print "    Evaluated SF uncertainties for flavour", flav
+
+                '''
+                        TFile root_file("StackerTemp.root");
+                        TTreeReader reader("Events", &root_file);
+                        TTreeReaderValue<vector<float>> jet_hadronFlv(reader, "jet_hadronFlv");
+
+                            int flav2 = jet_hadronFlv[%s];
+                            float CvsBval2 = jet_%sCvsB[%s];
+                            float CvsLval2 = jet_%sCvsL[%s];
+                            float xaxisval = %s; '''%(jetind,taggerPref,jetind,taggerPref,jetind,newBr)
+                    
+                '''
+                            TH2F *wtHist2, *wtHistUp;
+                            float ctagWt2, ctagWtUp, statUnc, wt;
+                            int binidx, xbin2, ybin2;
+                            string binname;
+                            
+                            if (flav2 == 4) {
+                                wtHist2 = cWtHist;
+                                wtHistUp = cWtHistStatUp;
+                            }
+                            else if (flav2 == 5) {
+                                wtHist2 = bWtHist;
+                                wtHistUp = bWtHistStatUp;
+                            }
+                            else {
+                                wtHist2 = lWtHist;
+                                wtHistUp = lWtHistStatUp;
+                            }
+                            binidx = SFUnc->GetXaxis()->FindBin(xaxisval);
+                            xbin2 = wtHist2->GetXaxis()->FindBin(CvsLval2);
+                            ybin2 = wtHist2->GetYaxis()->FindBin(CvsBval2);
+                            ctagWt2 = wtHist2->GetBinContent(xbin2,ybin2);
+                            ctagWtUp = wtHistUp->GetBinContent(xbin2,ybin2);
+                            statUnc = ctagWtUp - ctagWt2;
+                            binname = to_string(flav2)+'_'+to_string(ctagWt2)+'_'+to_string(ctagWtUp);
+
+                            auto it = std::find(SFBinNames[binidx].begin(), SFBinNames[binidx].end(), binname);
+                            if(it != SFBinNames[binidx].end()) {                            
+                                int index = std::distance(SFBinNames[binidx].begin(), it);
+                                int oldcount = SFBinCounts[binidx][index];
+                                wt = (pow((oldcount+1),2)-pow(oldcount,2))*pow(statUnc,2);
+                                SFBinCounts[binidx][index] = oldcount+1;
+                            } else {
+                                SFBinNames[binidx].push_back(binname);
+                                SFBinCounts[binidx].push_back(1);
+                                wt = pow(statUnc,2);
+                            }
+                            SFUnc->Fill(xaxisval,wt);
+                            return wt;
+                        '''
+
+                # thisflavDF = thisflavDF.Define("FilledSFUnc", uncsffunc)
+
+                # vec = vector('string')()
+                # vec.push_back("jet_hadronFlv[%s]"%jetind)
+                # vec.push_back("jet_%sCvsL[%s]"%(taggerPref,jetind))
+                # vec.push_back("jet_%sCvsB[%s]"%(taggerPref,jetind))
+                # vec.push_back(newBr)
+                # thisflavDF.Foreach(ROOT.fillUnc,vec)
+#            print selections + sampSels + flavSel, newBr
+    else:
+        myHisto = DF.Filter(selections + sampSels)     \
+                        .Histo1D(   histoModel,
+                                    newBr,
+                                    "newWeight2"
+                                )        
+    
+    
+    print dir, nTotalEvents    
+        
+    
+    if divideByFlav:
+        retHistos = []
+        for hist in myHisto:
+            retHistos.append(hist.Clone())
+#            print hist.Integral()
+        return retHistos, nTotalEvents
+    
+    return myHisto.Clone(), nTotalEvents
+
+def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="",filePre2="",filePost="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makePNG=True,makeROOT=False,noRatio=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",SFhistSuff="",drawDataMCRatioLine=False,normTotalMC=False,binWtTxt=False, getSFUnc = False):
+    if not makePNG and not makeROOT:
+        print "Neither PNG nor ROOT output was asked for. Exiting."
+        sys.exit(1)
+    filePre += filePre2
+    global lumi
+    if '_2018_' in rootPath:
+        era = 2018
+        lumi = 59960
+    elif '_2017_' in rootPath:
+        era = 2017
+        lumi = 41540
+    else:
+        era = 2016
+
     if not brName2D=="": noRatio=True
     
-    global wtFile, cWtHist, bWtHist, lWtHist, reWeight
+    global wtFile, cWtHist, bWtHist, lWtHist, reWeight, makeBinWtTxt, taggerPref
     if SFfile!="":
         reWeight = True
-        wtFile = TFile.Open(SFfile,"READ")
-        cWtHist = wtFile.Get("SFc_hist_central")
-        bWtHist = wtFile.Get("SFb_hist_central")
-        lWtHist = wtFile.Get("SFl_hist_central")
+        
+        #wtFile = TFile.Open(SFfile,"READ")
+        #cWtHist = wtFile.Get("SFc_hist_central")
+        #bWtHist = wtFile.Get("SFb_hist_central")
+        #lWtHist = wtFile.Get("SFl_hist_central")
+        
+        if "DeepJet" in SFfile:
+            taggerPref = "DeepFlav"
+        else:
+            taggerPref = ""
+
+        if "CvsB" in SFfile: adapDir = "CvsB"
+        else: adapDir = "CvsL"
+        
+        splitbypT = False
+        if "above40" in SFfile or "below40" in SFfile:
+            splitbypT = True
+            
+        print "Tagger Pref:", taggerPref
+        print "Split by pT:", splitbypT
+        
+        if splitbypT:
+            gInpCmd = '''
+                    TFile *wtFile = new TFile("%s");
+                    TH2F *cWtHist_below40 = (TH2F*)wtFile->Get("below40_SFc_PREFCvsL");
+                    TH2F *bWtHist_below40 = (TH2F*)wtFile->Get("below40_SFb_PREFCvsL");
+                    TH2F *lWtHist_below40 = (TH2F*)wtFile->Get("below40_SFl_PREFCvsL");
+                    TH2F *cWtHist_above40 = (TH2F*)wtFile->Get("above40_SFc_PREFCvsL");
+                    TH2F *bWtHist_above40 = (TH2F*)wtFile->Get("above40_SFb_PREFCvsL");
+                    TH2F *lWtHist_above40 = (TH2F*)wtFile->Get("above40_SFl_PREFCvsL");
+                    
+                    TH2F *cWtHist,*bWtHist,*lWtHist;
+                    int splitbypT = 1;
+            '''%(SFfile).replace("PREF",taggerPref)
+            
+        else:
+            gInpCmd = '''
+                    TFile *wtFile = new TFile("%s");
+                    TH2F *cWtHist = (TH2F*)wtFile->Get("SFc_histHISTSUFF");
+                    TH2F *bWtHist = (TH2F*)wtFile->Get("SFb_histHISTSUFF");
+                    TH2F *lWtHist = (TH2F*)wtFile->Get("SFl_histHISTSUFF");
+
+                    TH2F *cWtHistStatUp = (TH2F*)wtFile->Get("SFc_hist_StatUp");
+                    TH2F *bWtHistStatUp = (TH2F*)wtFile->Get("SFb_hist_StatUp");
+                    TH2F *lWtHistStatUp = (TH2F*)wtFile->Get("SFl_hist_StatUp");
+                    
+                    TH2F *cWtHist_below40,*bWtHist_below40,*lWtHist_below40,*cWtHist_above40,*bWtHist_above40,*lWtHist_above40;
+                    int splitbypT = 0;
+            '''%(SFfile)
+
+        
+        gInpCmd = gInpCmd.replace("PREF",taggerPref).replace("ADAP",adapDir).replace("HISTSUFF",SFhistSuff)
+        print "\nLoading SF histograms:"
+        print gInpCmd  
+        gInterpreter.ProcessLine(gInpCmd)
+        
         outDir.rstrip('/')
-        outDir += "_" + SFfile.split('.')[0].split('_')[1]
+        outDir += "_" + '_'.join(SFfile.rstrip('.root').split('_')[3:])
         print "Using c-tag SF file:", SFfile
+
+        if getSFUnc:
+            global SFUnc, SFBinCounts
+            SFUnc = TH1F(getbrText(brName)+"_Unc",brLabel,nbins,start,end)
+            SFBinCounts = {}
+            for ib in range(nbins+2):
+                SFBinCounts[ib] = {}
+            # gInterpreter.ProcessLine("TH1F *SFUnc = new TH1F(\"%s\",\"%s\",%d,%f,%f);"%(getbrText(brName)+"Unc",brLabel,nbins,start,end))
+            # gInterpreter.ProcessLine("vector<vector<string>> SFBinNames; vector<vector<int>> SFBinCounts;")
+            # for ib in range(nbins+2):
+            #     gInpNew = '''
+            #                 vector<string> SFBinNames_%d;
+            #                 vector<int> SFBinCounts_%d;
+            #                 SFBinNames.push_back(SFBinNames_%d);
+            #                 SFBinCounts.push_back(SFBinCounts_%d);
+            #     '''%(ib,ib,ib,ib)
+                # gInterpreter.ProcessLine(gInpNew)
+            # print "Declared quantities to calculate SF uncertainty propagation."
     else:
         reWeight = False
-    
+        
+    if binWtTxt:
+        makeBinWtTxt = True
+        binWtTxtFileDict = {}
+        normFactByFl = {}
+        dataBinErrs = {}
+        MCBinErrs = {}
+
     if not outDir.endswith("/"): outDir += "/"
     os.system("mkdir -p "+outDir)
     # ================= Define names, locations, etc. ===================
     # colours = [kCyan,kBlue,kGreen,kRed,kOrange,kOrange-7,kMagenta,kYellow,kGray+2,kWhite]
+
+    if era == 2016: samplesDict = samplesDict2016
+    elif era == 2017: samplesDict = samplesDict2017
+    elif era == 2018: samplesDict = samplesDict2018
+
+    sampleNames = []
+    AllSamplePaths = []
+    AllXSecs = []
+    AllXSecUnc = []
+
+    modXSecFracs = {
+        ("DYJets","b") : 0.025,
+        ("DYJets","c") : 0.09,
+        ("WJets","c") : 0.08
+    } 
+
+    if '_' in useXSecUnc:
+        if "BRUnc" in useXSecUnc:
+            procName = ""
+            modprocName = useXSecUnc.split('_')[2]
+            modflav = useXSecUnc.split('_')[3]
+            direction = useXSecUnc.split('_')[4]
+            if modflav == "b": modflavnum = 1
+            elif modflav == "c": modflavnum = 0
+            else: raise ValueError
+            print "Using modded XSec for %s flavour of %s process."%(modflav,modprocName)
+        else:
+            procName = useXSecUnc.split('_')[1]
+            direction = useXSecUnc.split('_')[2]
+            print "Using XSec uncertainty:", useXSecUnc
+            modprocName = ""
+    else:
+        procName = ""
+        modprocName = ""
+
+    samplesInDir = os.listdir(rootPath)
+    if len([i for i in samplesInDir if i.startswith("W1JetsToLNu_")]) > 0:
+        global splitWbynJets
+        splitWbynJets = True
+        print "Will split WJets samples by jet multiplicity."
+    if len([i for i in samplesInDir if i.startswith("DYJetsToLL_M-50_HT-")]) > 0:
+        global splitDYbyHT
+        splitDYbyHT = True
+        print "Will split DYJets samples by HT bins."
+
     colours=[]
     colourNames = [kCyan,kYellow,kMagenta,kBlue,kGreen,kRed,kGray]
-    for col in colourNames:
-        colours.append(col)
-        colours.append(col+1)
-        colours.append(col+3)
-        colours.append(col-9)
+    samplesToProc = ["WJets","DYJets","ttbar","ST","VV"]
+    if "QCD" in samplesDict:
+        if samplesDict["QCD"][0][0].rstrip('/') in samplesInDir:
+            samplesToProc.append("QCD")
 
-    sampleNames =   ["W+c","W+cc","W+uds","W+b"]*5   + \
-                    ["DY+c","DY+cc","DY+uds","DY+b"]     + \
-                    ["ttbar->c","ttbar->cc","ttbar->uds","ttbar->b"]       + \
-                    ["ST->c","ST->cc","ST->uds","ST->b"]*5+ \
-                    ["VV->c","VV->cc","VV->uds","VV->b"]*3
+    for isamp, sName in enumerate(samplesToProc):
+        sampleUsed = False
+        for samplist in samplesDict[sName]:
+            if samplist[0].rstrip('/') not in samplesInDir: continue
+            sampleUsed = True
+            sampleNames += [sName+"(c)",sName+"(b)",sName+"(uds)",sName+"(lep)"]
 
-    if useQCD:
-        if moreQCD: sampleNames += ["QCD->c","QCD->cc","QCD->uds","QCD->b"]*4
-        sampleNames += ["QCD->c","QCD->cc","QCD->uds","QCD->b"]*8
+            AllSamplePaths.append(rootPath+samplist[0].rstrip('/'))
+            XSecNom = samplist[1]
 
-    WPaths      = [
-                    rootPath+"WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                   rootPath+"W1JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                   rootPath+"W2JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                   rootPath+"W3JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                   rootPath+"W4JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/"
-                    #
-                    # rootPath+"WJetsToLNu_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                    # rootPath+"WJetsToLNu_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                    # rootPath+"WJetsToLNu_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                    # rootPath+"WJetsToLNu_HT-600To800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                    # rootPath+"WJetsToLNu_HT-800To1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                    # rootPath+"WJetsToLNu_HT-1200To2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-                    # rootPath+"WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/"
-                  ]
+            if sName == procName:
+                if direction == "up":     XSecNom += samplist[2]
+                elif direction == "down": XSecNom -= samplist[2]
+                else:                     raise ValueError
 
-    samplePaths = [
-#                    rootPath+"DYJetsToLL_M-50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-#                    rootPath+"DYJetsToLL_M-50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-#                    rootPath+"DYJetsToLL_M-50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-#                    rootPath+"DYJetsToLL_M-50_HT-600to800_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-#                    rootPath+"DYJetsToLL_M-50_HT-800to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-#                    rootPath+"DYJetsToLL_M-50_HT-1200to2500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
-#                    rootPath+"DYJetsToLL_M-50_HT-2500toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/",
+            for i in range(4):
+                XSecNomTemp = XSecNom
+                if sName == modprocName and i == modflavnum:
+                    modfrac = modXSecFracs[(modprocName,modflav)]
+                    if direction == "up":     XSecNomTemp += XSecNom*modfrac
+                    elif direction == "down": XSecNomTemp -= XSecNom*modfrac
+                    else:                     raise ValueError                    
+                AllXSecs.append(XSecNomTemp)
 
-#                    rootPath+"DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/",
-                    rootPath+"DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8",
-
-                    rootPath+"TT_TuneCUETP8M2T4_13TeV-powheg-pythia8",
-
-                    rootPath+"ST_s-channel_4f_InclusiveDecays_13TeV-amcatnlo-pythia8",
-                    rootPath+"ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1",
-                    rootPath+"ST_t-channel_top_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1",
-                    rootPath+"ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M2T4",
-                    rootPath+"ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1",
-                    #
-                    rootPath+"WW_TuneCUETP8M1_13TeV-pythia8",
-                    rootPath+"WZ_TuneCUETP8M1_13TeV-pythia8",
-                    rootPath+"ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8"
-                    # rootPath+"ZZTo2Q2Nu_13TeV_amcatnloFXFX_madspin_pythia8",
-                    ]
-    if useQCD:
-        if moreQCD:
-            samplePaths += [
-                    rootPath+"QCD_Pt-15to20_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-20to30_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-30to50_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-50to80_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8"]
-
-        samplePaths += [
-                    rootPath+"QCD_Pt-80to120_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-120to170_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-170to300_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-300to470_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-470to600_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-600to800_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-800to1000_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8",
-                    rootPath+"QCD_Pt-1000toInf_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8"
-                    ]
-
-
-    AllSamplePaths = WPaths+samplePaths
+        if sampleUsed:
+            col = colourNames[isamp]
+            colours.append(col)
+            colours.append(col-9)
+            colours.append(col+2)
+            colours.append(col-10)
 
     AllSamplePaths = [i.rstrip('/')+pathSuff for i in AllSamplePaths]
 
@@ -372,164 +563,16 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     sElePath    =   rootPath+"SingleElectron/"
     dMuPath     =   rootPath+"DoubleMuon/"
     dEGPath     =   rootPath+"DoubleEG/"
-    dMuEGPath     =   rootPath+"MuonEG/"
-
-    WXSecs   = [
-                61526.7,        #inclusive
-               11786.1,        #W1Jets
-               3854.2,         #W2Jets
-               1273.6,         #W3Jets
-               701.4           #W4Jets
-
-                 # 1345*1.21,      #100-200
-                 # 359.7*1.21,     #200-400
-                 # 48.91*1.21,     #400-600
-                 # 12.05*1.21,     #600-800
-                 # 5.501*1.21,     #800-1200
-                 # 1.329*1.21,     #1200-2500
-                 # 0.03216*1.21    #2500-inf
-                ]
-
-    OtherXSecs=[
-#                147.4*1.23,     # DYJets 100-200
-#                41.04*1.23,     # 200-400
-#                5.674*1.23,     # 400-600
-#                1.358*1.23,     # 600-800
-#                0.6229*1.23,    # 800-1200
-#                0.1512*1.23,    # 1200-2500
-#                0.003659*1.23,  # 2500-inf
-
-#                2075.14*3,      #inclusive DYJets amcatnlo
-                6225.42,    #inclusive DYJets MG
-
-                831.76,          # ttbar
-
-                10.12,         # ST
-                26.38,
-                44.33,
-                35.85,
-                35.85,
-                #
-                64.3,          # VV
-                23.43,
-                3.222
-                # 4.033,
-                ]
-
-
-    if useQCD:
-        if moreQCD:
-            OtherXSecs += [
-                    1273190000*0.003,
-                    558528000*0.0053,      # QCD Mu enriched
-                    139803000*0.01182,
-                    19222500*0.02276
-                    ]
-        OtherXSecs += [
-                2758420*0.03844,
-                469797*0.05362,
-                117989*0.07335,
-                7820.25*0.10196,
-                645.528*0.12242,
-                187.109*0.13412,
-                32.3486*0.14552,
-                10.4305*0.15544
-                ]
-
-
-    WXSecsUnc= [    2312,
-                    31.57,
-                    11.22,
-                    3.36,
-                    1.85
-
-                    # 1.2*1.21,
-                    # 0.2*1.21,
-                    # 0.072*1.21,
-                    # 0.0073*1.21,
-                    # 0.017*1.21,
-                    # 0.0025*1.21,
-                    # 0.000104*1.21
-                    ]
-    OtherXSecUnc = [
-                     # 0.1399*1.23,       # DYJets HT binned
-                     # 0.04009*1.23,
-                     # 0.005455*1.23,
-                     # 0.001307*1.23,
-                     # 0.0005996*1.23,
-                     # 0.0001884*1.23,
-                     # 5.548e-6*1.23,
-
-                    124.5,                 #Incl DY
-                    64.26,                 # ttbar
-
-                    0.01334,               # ST
-                    1.32,
-                    1.76,
-                    1.7,
-                    1.7,
-
-                    0.02817,                # VV
-                    0.01048,
-                    0.004901
-                    # 0.007222
-    ]
-
-    if useQCD:
-        if moreQCD:
-            OtherXSecUnc += [
-                    0,
-                    0,      # QCD Mu enriched
-                    0,
-                    0
-                    ]
-        OtherXSecUnc += [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-                ]
-
-    XSecMap = {
-                'W' : [0,4],
-                'DY': [5,5],
-                'TT': [6,6],
-                'ST': [7,11],
-                'VV': [12,14]
-            }
-
-    AllXSecs = WXSecs+OtherXSecs
-    AllXSecUnc = WXSecsUnc+OtherXSecUnc
-
-    assert len(AllXSecs)==len(AllXSecUnc)
-    assert len(AllXSecs)==len(AllSamplePaths)
-
-    if '_' in useXSecUnc:
-        procName = useXSecUnc.split('_')[1]
-        direction = useXSecUnc.split('_')[2]
-        for idx in range(XSecMap[procName][0],XSecMap[procName][1]+1):
-            if direction == "up":
-                AllXSecs[idx] += AllXSecUnc[idx]
-            elif direction == "down":
-                AllXSecs[idx] -= AllXSecUnc[idx]
-            else:
-                raise ValueError
-        print "Using XSec uncertainty:", useXSecUnc
-
-    XSecs     =[y for x in AllXSecs for y in 4*[x]]
-    # print "XSecs:", XSecs
-
-    # XSecsUnc  =[y for x in WXSecsUnc for y in 4*[x]]
+    dMuEGPath   =   rootPath+"MuonEG/"
+    EGPath2018  =   rootPath+"EGamma/"
 
     finalHists = {}
     sampleNamesSet = list(sorted(set(sampleNames),key=sampleNames.index))
 
     if not dataset=="":
-        if dataset=="smu":
+        if (dataset=="sele" or dataset=="deg") and era==2018:
+            datadir = EGPath2018
+        elif dataset=="smu":
             datadir = sMuPath
         elif dataset=="sele":
             datadir = sElePath
@@ -539,8 +582,8 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
             datadir = dEGPath
         elif dataset=="mue":
             datadir = dMuEGPath
-            global lumi
-            lumi = 35608
+            # if era == 2016:
+            #     lumi = 35608
         else:
             raise ValueError
 
@@ -548,38 +591,39 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     c.SetCanvasSize(1200,1200)
 #    c.SetWindowSize(1200,1200)
 
+    print "Using era: %d, Lumi: %d"%(era,lumi)
+
     # ======================= Selection info =========================
     if nminus1:
         if brName in selections:
-            selIdx = selections.index(brName)
-            del selections[selIdx]
-            del cuts[selIdx]
+            selList = selections.split("&&")
+            updatedSel = [sel.strip() for sel in selList if not brName in sel]
+            selections = ' && '.join(updatedSel)            
             print "Plotting (n-1) cuts plot..."
         else:
             print "Failed to plot (n-1) cuts plot, plotting all-cuts plot instead..."
     if len(selections) > 0:
         print "Selections:"
-        for iSel, selName in enumerate(selections):
-            if len(cuts[iSel])<=2:
-                rangeText ="in"
-            else:
-                rangeText = "not in"
-            print "  ->",selName,rangeText,"["+str(cuts[iSel][0])+","+str(cuts[iSel][1])+"]"
+        for isel in selections.split('&&'):            
+            print '  --> '+isel.strip()
+        
     # ----------------------------------------------------------------
 
     # =================== Generate output filename ===================
     if not filePre=="": filePre += "_"
     if nminus1: filePre += "nminus1_"
-    saveName = filePre+getbrText(brName)
-    if not selections == "":
-        for iSel, selection in enumerate(selections):
-            if selection in [["M_RelIso",0],"hardMu_Jet_PtRatio",["M_dz",0],["M_dxy",0],["M_sip3d",0]]: continue
-            if selection in [["E_RelIso",0],"hardE_Jet_PtRatio",["E_dz",0],["E_dxy",0],["E_sip3d",0]]: continue
-            saveName += "+"
-            if type(selection) is str:
-                saveName += selection+"_"+str(cuts[iSel][0])+"-"+str(cuts[iSel][1])
-            elif type(selection) is list:
-                saveName += selection[0]+"_"+str(selection[1])+"_"+str(cuts[iSel][0])+"-"+str(cuts[iSel][1])
+    saveName = filePre+getbrText(brName)+SFhistSuff+"_"+filePost
+    for rem in [" ","?",":","="]:
+        saveName = saveName.replace(rem,"")
+    #if not selections == "":
+        #for iSel, selection in enumerate(selections):
+            #if selection in ["hardMu_Jet_PtRatio",["M_dz",0],["M_dxy",0],["M_sip3d",0]]: continue
+            #if selection in ["hardE_Jet_PtRatio",["E_dz",0],["E_dxy",0],["E_sip3d",0]]: continue
+            #saveName += "+"
+            #if type(selection) is str:
+                #saveName += selection+"_"+str(cuts[iSel][0])+"-"+str(cuts[iSel][1])
+            #elif type(selection) is list:
+                #saveName += selection[0]+"_"+str(selection[1])+"_"+str(cuts[iSel][0])+"-"+str(cuts[iSel][1])
     # ----------------------------------------------------------------
 
     if not doCombine:
@@ -600,11 +644,19 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         #     integrals.append(nTot)
         #     # integrals.append(eff_xsec[dir.strip('/').split('/')[-1]])
         allHists=[]
+        histsToFlMap = []
         for dir in AllSamplePaths:
-            histo, nTot = makeHisto(dir,"Events",brName,brLabel,nbins,start,end,weightName=MCWeightName,divideByFlav=True,selections=selections,cuts=cuts,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),makeCustomH=makeCustomH)
+            flName = dir.split('/')[-1]
+            print "Starting with "+dir
+            histo, nTot = makeHisto(dir,"Events",brName,brLabel,nbins,start,end,weightName=MCWeightName,divideByFlav=True,selections=selections,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),getSFUnc=getSFUnc)
             for idx in range(4):
-                allHists.append(histo[idx])
+                allHists.append(histo[idx].Clone())
                 integrals.append(nTot)
+                histsToFlMap.append(flName)
+            print "Done."
+            if makeBinWtTxt: binWtTxtFileDict[flName] = binWtDict
+        
+        # gInterpreter.ProcessLine("TFile *nf = new TFile(\"text.root\",\"RECREATE\"); nf->cd(); SFUnc->Write(); nf->Close()")
         # ----------------------------------------------------------------
 
         # ================= Evaluate normalization factors ===================
@@ -612,7 +664,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
 
         for ind, iHist in enumerate(allHists):
             if integrals[ind] > 0:
-                normF = lumi * XSecs[ind] / integrals[ind]
+                normF = lumi * AllXSecs[ind] / integrals[ind]
                 # normF = integrals[ind]
             else:
                 normF = 0
@@ -620,7 +672,9 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
             nSelEvents = iHist.Integral()
             normFactors.append(normF)
             iHist.Scale(normF)
-            print sampleNames[ind],": Total MC:", integrals[ind], "; Selected Events:", nSelEvents, "; Norm Factor:", normF, "; Events in stack:", iHist.Integral()
+            if makeBinWtTxt: normFactByFl[histsToFlMap[ind]] = normF
+                
+            print histsToFlMap[ind], sampleNames[ind],": Total MC:", integrals[ind], "; Selected Events:", nSelEvents, "; Norm Factor:", normF, "; Events in stack:", iHist.Integral()
         # -------------------------------------------------------------------
 
         # ===================== Evaluate MC stat errors ======================
@@ -699,21 +753,21 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     # ----------------------------------------------------------
 
     # ===================== Make data histo ==========================
-    if not dataset=="":        
-        histoD, nTot = makeHisto(datadir,"Events",brName,brLabel,nbins,start,end,weightName=DataWeightName,selections=selections,cuts=cuts,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),makeCustomH=makeCustomH)
-        
+    if not dataset=="":
+        histoD, nTot = makeHisto(datadir,"Events",brName,brLabel,nbins,start,end,weightName=DataWeightName,selections=selections,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2))
+
         if normTotalMC:
             MCCount = myStack.GetStack().Last().Integral()
             DataCount = histoD.Integral()
             MCNormFactor = DataCount/MCCount
-            
+
             myStack.Delete()
             myStack = THStack("myStack","")
 
             for iName in sampleNamesSet:
                 finalHists[iName].Scale(MCNormFactor)
                 myStack.Add(finalHists[iName],"hist")
-            
+
             histoErr.Scale(MCNormFactor)
 
         if not dataStat=="":
@@ -848,15 +902,16 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
             hLine = TLine(start,1,end,1)
             hLine.SetLineColor(kRed)
             hLine.Draw()
-            
+
             if drawDataMCRatioLine:
                 MCCount = histoMC.Integral()
-                DataCount = histoD.Integral()
-                MCNormFactor = DataCount/MCCount
-                hLine2 = TLine(start,MCNormFactor,end,MCNormFactor)
-                hLine2.SetLineColor(kBlue)
-                hLine2.Draw()
-                
+                if MCCount > 0.:
+                    DataCount = histoD.Integral()
+                    MCNormFactor = DataCount/MCCount
+                    hLine2 = TLine(start,MCNormFactor,end,MCNormFactor)
+                    hLine2.SetLineColor(kBlue)
+                    hLine2.Draw()
+
     # ----------------------------------------------------------
 
     # ======================== LaTeX ==========================
@@ -876,16 +931,42 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         texTR.DrawLatexNDC(0.89,0.95, "#bf{"+str(lumi/1000.)+" fb^{-1} (13 TeV)}")
     # ----------------------------------------------------------
 
-    c.SaveAs(outDir+saveName+".png")
+    if makePNG: c.SaveAs(outDir+saveName+".png")
 
     if makeROOT:
         rootName = outDir+saveName+".root"
         outROOT = TFile.Open(rootName,'RECREATE')
+        cHist = ""
+        bHist = ""
+        lHist = ""
+        lepHist = ""
         for ind, iName in enumerate(sampleNamesSet):
             outHName = iName.replace('+','plus')
             outHName = outHName.replace('->','to')
+            outHName = outHName.replace('(','_').rstrip(")")
             finalHists[iName].SetNameTitle(outHName,getbrText(brName))
             finalHists[iName].Write()
+            if iName.endswith("(c)"):
+                if cHist == "": cHist = finalHists[iName].Clone()
+                else: cHist.Add(finalHists[iName])
+            elif iName.endswith("(b)"):
+                if bHist == "": bHist = finalHists[iName].Clone()
+                else: bHist.Add(finalHists[iName])
+            elif iName.endswith("(uds)"):
+                if lHist == "": lHist = finalHists[iName].Clone()
+                else: lHist.Add(finalHists[iName])
+            elif iName.endswith("(lep)"):
+                if lepHist == "": lepHist = finalHists[iName].Clone()
+                else: lepHist.Add(finalHists[iName])
+        cHist.SetNameTitle("c",getbrText(brName))
+        cHist.Write()
+        bHist.SetNameTitle("b",getbrText(brName))
+        bHist.Write()
+        lHist.SetNameTitle("uds",getbrText(brName))
+        lHist.Write()
+        lepHist.SetNameTitle("lep",getbrText(brName))
+        lepHist.Write()
+            
         histoMC.SetNameTitle("MCSum",getbrText(brName))
         histoMC.Write()
         if not dataset=="":
@@ -893,13 +974,40 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
             histoD.Write()
         # myStack.SetNameTitle("MCStack",getbrText(brName))
         # myStack.Write()
-        histoSig=finalHists[sampleNamesSet[-1]]
-        histoSig.SetNameTitle("MCSig",getbrText(brName))
-        histoSig.Write()
-        histoBkg.SetNameTitle("MCBkg",getbrText(brName))
-        histoBkg.Write()
+        #histoSig=finalHists[sampleNamesSet[-1]]
+        #histoSig.SetNameTitle("MCSig",getbrText(brName))
+        #histoSig.Write()
+        #histoBkg.SetNameTitle("MCBkg",getbrText(brName))
+        #histoBkg.Write()
+
+        if getSFUnc:
+            for ib in range(nbins+2):
+                uncsum2 = 0.
+                for thiskey in SFBinCounts[ib]:
+                    statUnc = thiskey[2]-thiskey[1]
+                    wtsum = 0
+                    for flName in SFBinCounts[ib][thiskey]:
+                        normfactor = normFactors[histsToFlMap.index(flName)]
+                        wtsum += normfactor*SFBinCounts[ib][thiskey][flName]
+                    uncsum2 += (wtsum*statUnc)**2
+                    if ib == 18: print wtsum,statUnc
+                SFUnc.SetBinContent(ib,uncsum2**0.5)
+            SFUnc.SetNameTitle("SFUnc",getbrText(brName))
+            SFUnc.Write()
+
         outROOT.Close()
         print rootName, "created."
+    
+    if makeBinWtTxt:
+        binTxtName = outDir+saveName+".txt"
+        with open(binTxtName,'w') as binFile:
+            binFile.write("normFact = ")
+            binFile.write(str(json.dumps(normFactByFl, indent=4, sort_keys=True)))
+            binFile.write("\n\n")
+            binFile.write("binWtDict = ")
+            binFile.write(str(json.dumps(binWtTxtFileDict, indent=4, sort_keys=True)))
+            
+        print "Written %s."%binTxtName
 
     if not doCombine:
         if dataset=="":
@@ -910,4 +1018,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
 if __name__ == "__main__":
     if len(sys.argv)>1: testMode=True
 #    plotStack("jetMu_Pt",r"p^{#mu}_{T} [GeV] (mu)",15,0,25,selections=["is_M"],cuts=[[1,1]],dataset="smu",makeROOT=True,noRatio=True)
-    plotStack(["jet_CvsL","muJet_idx"],"CvsL",5,0,1,selections=["is_M"],cuts=[[1,1]],dataset="smu",brName2D=["jet_CvsB","muJet_idx"], brLabel2="CvsB",nbins2=5,start2=0,end2=1,drawStyle="",makeROOT=True,SFfile="SFs_semilepExtended.root")
+    #plotStack("jet_CvsL[muJet_idx]","CvsL",5,0,1,selections=["is_M"],dataset="smu",brName2D=["jet_CvsB","muJet_idx"], brLabel2="CvsB",nbins2=5,start2=0,end2=1,drawStyle="",makeROOT=True)
+    plotStack("jet_CvsL[muJet_idx]",r"Jet CvsL (#mu)",30,-0.2,1,        \
+        selections = "is_M ==1 && jetMuPt_by_jetPt < 0.4 && M_RelIso[0] < 0.05 && (hardMu_Jet_PtRatio > 0.75 || hardMu_Jet_PtRatio < 0.) && abs(M_dz[0]) < 0.01 && abs(M_dxy[0]) < 0.002 && M_sip3d[0] < 2 && jet_nJet <= 3 && diLepVeto == 0 && (Z_Mass_best < 80 || Z_Mass_best > 100) && (Z_Mass_min > 12 || Z_Mass_min < 0) && jet_muplusneEmEF[muJet_idx] < 0.7 && jetMu_iso > 0.5",  \
+            dataset="smu",makeROOT=True)

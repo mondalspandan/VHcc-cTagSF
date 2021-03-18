@@ -8,9 +8,9 @@ import os, time, sys, Stacker
 # plotStack("jetMu_Pt",r"p^{#mu}_{T} [GeV], 50<p^{jet}_{T}<70",15,0,25,selections=[["jet_Pt","muJet_idx"]],cuts=[[50,70]])
 # plotStack("jetMu_Pt",r"p^{#mu}_{T} [GeV], 70<p^{jet}_{T}<200",15,0,25,selections=[["jet_Pt","muJet_idx"]],cuts=[[70,200]])
 
-DYPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190219_DY_pt20/"
-TTPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190219_TT_pt20/"
-WcPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190206_pt20/"
+DYPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190708_2017_DY/"
+TTPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190708_2017_TT/"
+WcPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190727_2017_Wc_2/"
 
 if len(sys.argv) > 1:
     start_idx = 1 + float(sys.argv[1])
@@ -19,39 +19,55 @@ else:
 
 def applyCuts(ln,reg=""):
     ln = ln.replace('ZMASSCUT','[85,95,\"invert\"]')
-    # ln = ln.replace('CVXBINNING','varBin1=[0.,0.2,0.4,0.6,0.8,1.],varBin2=[0.,0.2,0.4,0.6,0.8,1.]')
-    ln = ln.replace('CVXBINNING','varBin1=[0.,0.2,0.35,0.5,0.7,1.],varBin2=[0.,0.2,0.35,0.5,0.7,1.]')
+    ln = ln.replace('CVXBINNING','varBin1=[0.,0.2,0.4,0.6,0.8,1.],varBin2=[0.,0.2,0.4,0.6,0.8,1.]')
+    # ln = ln.replace('CVXBINNING','varBin1=[0.,0.2,0.35,0.5,0.7,1.],varBin2=[0.,0.2,0.35,0.5,0.7,1.]')
 
 
-    ln = ln.replace('TTWEIGHT','MCWeightName="eventWeight",DataWeightName="eventWeight",yTitle="Events",filePre="TT",rootPath="'+TTPath+'"')
-    ln = ln.replace('WCWEIGHT','MCWeightName="eventWeight",DataWeightName="eventWeight",yTitle="OS-SS Events",filePre="Wc",rootPath="'+WcPath+'"')
-    ln = ln.replace('DYWEIGHT','MCWeightName="eventWeight",DataWeightName="eventWeight",yTitle="Events",filePre="DY",rootPath="'+DYPath+'"')
+    ln = ln.replace('TTWEIGHT','MCWeightName="eventWeight",DataWeightName="eventWeight",yTitle="Events",filePre="TTDi",drawDataMCRatioLine=True,rootPath="'+TTPath+'"')
+    ln = ln.replace('TTSEMIWEIGHT','MCWeightName="eventWeightUnsigned",DataWeightName="eventWeightUnsigned",yTitle="Events",filePre="TTSemi",drawDataMCRatioLine=True,rootPath="'+WcPath+'"')
+    ln = ln.replace('WCWEIGHT','MCWeightName="eventWeight",DataWeightName="eventWeight",yTitle="OS-SS Events",filePre="Wc",drawDataMCRatioLine=True,rootPath="'+WcPath+'"')
+    ln = ln.replace('DYWEIGHTNOPU','MCWeightName="eventWeight/PUWeight",DataWeightName="eventWeight",yTitle="Events",filePre="DYNoPU",drawDataMCRatioLine=True,rootPath="'+DYPath+'"')
+    ln = ln.replace('DYWEIGHT','MCWeightName="eventWeight",DataWeightName="eventWeight",yTitle="Events",filePre="DY",drawDataMCRatioLine=True,rootPath="'+DYPath+'"')
+    
+    ln = ln.replace('LEPWEIGHT','MCWeightName="eventWeightUnsigned",DataWeightName="eventWeightUnsigned",yTitle="Events",filePre="Lep",drawDataMCRatioLine=True,rootPath="'+WcPath+'"')
 
 #    ln = ln.replace('CVXBINNING','varBin1=[0,0.2,0.35,0.5,0.7,1.],varBin2=[0,0.4,0.525,0.65,0.8,1.]')
     # ln = ln.replace('CVXBINNING','makeCustomH=True')
 
-    ln = ln.replace('ESEL','selections=["is_E","signWeight","jetMuPt_by_jetPt",QCDSELE,"jet_nJet"]')    # ,["jet_CvsB","muJet_idx"]
-    ln = ln.replace('ECUT','cuts=[[1,1],[-1,1],[0,0.6],QCDCUTE,[0,4]]')
-    ln = ln.replace('MSEL','selections=["is_M","Z_Mass","Z_Mass","signWeight","jetMuPt_by_jetPt",QCDSELM,"jet_nJet"]')
-    ln = ln.replace('MCUT','cuts=[[1,1],[85,95,\"invert\"],[0,12,\"invert\"],[-1,1],[0,0.4],QCDCUTM,[0,4]]')                             #,[-1,0.5],[1,1e4]]
-
-    # # ttbar CR
-    # ln = ln.replace('TTSELE','selections=["is_E","signWeight","jetMuPt_by_jetPt",QCDSELE,"jet_nJet"]')    #
-    # ln = ln.replace('TTCUTE','cuts=[[1,1],[-1,1],[0,0.6],QCDCUTE,[5,100]]')
-    # ln = ln.replace('TTSELM','selections=["is_M","Z_Mass","Z_Mass","signWeight","jetMuPt_by_jetPt",QCDSELM,"jet_nJet"]')
-    # ln = ln.replace('TTCUTM','cuts=[[1,1],[85,95,\"invert\"],[0,12,\"invert\"],[-1,1],[0,0.4],QCDCUTM,[5,100]]')                             #,[-1,0.5],[1,1e4]]
-
+    ln = ln.replace('ESEL','selections=["is_E","signWeight","jetMuPt_by_jetPt",QCDSELE,"jet_nJet","diLepVeto"]')    # ,["jet_CvsB","muJet_idx"]
+    ln = ln.replace('ECUT','cuts=[[1,1],[-1,1],[0,0.6],QCDCUTE,[0,4],[0,0]]')
+    ln = ln.replace('MSEL','selections=["is_M","signWeight","jetMuPt_by_jetPt",QCDSELM,"jet_nJet","diLepVeto","Z_Mass_best","Z_Mass_min",["jet_muplusneEmEF","muJet_idx"],"jetMu_iso"]')   #"Z_Mass","Z_Mass","Z_Mass_max","Z_Mass_min"
+    ln = ln.replace('MCUT','cuts=[[1,1],[-1,1],[0,0.4],QCDCUTM,[0,4],[0,0],[80,100,\"invert\"],[0,12,\"invert\"],[0,0.7],[0,0.5,"invert"]]')           #[85,95,\"invert\"],[80,1e5,"invert"],[0,12,"invert"]                  #,[-1,0.5],[1,1e4]]
+    
+    # Prompt Lepton CR    
+    ln = ln.replace('LEPSEL','selections=["is_M","signWeight","Z_Mass","jetMuPt_by_jetPt",QCDSELM,"jet_nJet","diLepVeto"]')
+    ln = ln.replace('LEPCUT','cuts=[[1,1],[1,1],[85,95],[0,1.5],QCDCUTM,[0,4],[0,0]]')
+    
+    # ttbar CR
+    #Dileptonic
     ln = ln.replace('TTSELME','selections=["is_ME"]')
     ln = ln.replace('TTCUTME','cuts=[[1,1]]')
-    ln = ln.replace('TTSELMM','selections=["is_MM","Z_Mass","met_Pt"]')
-    ln = ln.replace('TTCUTMM','cuts=[[1,1],[75,105,"reverse"],[40,1e4]]')
-    ln = ln.replace('TTSELEE','selections=["is_EE","Z_Mass","met_Pt"]')
-    ln = ln.replace('TTCUTEE','cuts=[[1,1],[75,105,"reverse"],[40,1e4]]')
+    ln = ln.replace('TTSELMM','selections=["is_MM","Z_Mass","Z_Mass","met_Pt"]')
+    ln = ln.replace('TTCUTMM','cuts=[[1,1],[75,105,"reverse"],[0,12,\"invert\"],[40,1e4]]')
+    ln = ln.replace('TTSELEE','selections=["is_EE","Z_Mass","Z_Mass","met_Pt"]')
+    ln = ln.replace('TTCUTEE','cuts=[[1,1],[75,105,"reverse"],[0,12,\"invert\"],[40,1e4]]')
 
-#    ln = ln.replace(',QCDSELM','')
-#    ln = ln.replace(',QCDCUTM','')
-#    ln = ln.replace(',QCDSELE','')
-#    ln = ln.replace(',QCDCUTE','')
+    #Semileptonic
+    ln = ln.replace('TTSELE','selections=["is_E","signWeight","jetMuPt_by_jetPt",QCDSELE,"jet_nJet","diLepVeto","jetMu_Pt"]')    #
+    ln = ln.replace('TTCUTE','cuts=[[1,1],[-1,1],[0,0.6],QCDCUTE,[5,100],[0,0],[5,25]]')
+    ln = ln.replace('TTSELM','selections=["is_M","Z_Mass","Z_Mass","signWeight","jetMuPt_by_jetPt",QCDSELM,"jet_nJet","diLepVeto","jetMu_Pt"]')
+    ln = ln.replace('TTCUTM','cuts=[[1,1],[85,95,\"invert\"],[0,12,\"invert\"],[-1,1],[0,0.4],QCDCUTM,[5,100],[0,0],[5,25]]')                             #,[-1,0.5],[1,1e4]]
+
+    #DY
+    ln = ln.replace('DYSELM','selections=["is_M",["M_Pt",0],"Z_Pt"]')
+    ln = ln.replace('DYCUTM','cuts=[[1,1],[0,20,"invert"],[0,15,"invert"]]')
+    ln = ln.replace('DYSELE','selections=["is_E",["E_Pt",0],"Z_Pt"]')
+    ln = ln.replace('DYCUTE','cuts=[[1,1],[0,27,"invert"],[0,15,"invert"]]')
+
+    # ln = ln.replace(',QCDSELM','')
+    # ln = ln.replace(',QCDCUTM','')
+    # ln = ln.replace(',QCDSELE','')
+    # ln = ln.replace(',QCDCUTE','')
 
     ln = ln.replace('QCDSELM','["M_RelIso",0],"hardMu_Jet_PtRatio",["M_dz",0],["M_dxy",0],["M_sip3d",0]')
     ln = ln.replace('QCDCUTM','[0,0.05],[0,0.75,"reverse"],[-0.01,0.01],[-0.002,0.002],[0,2]')
@@ -63,81 +79,163 @@ def applyCuts(ln,reg=""):
 
 arguments = '''
     # Wc selection
-           # "jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (mu)",25,0,25,MSEL,MCUT,dataset="smu",WCWEIGHT
-           # "jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (e)",25,0,25,ESEL,ECUT,dataset="sele",WCWEIGHT
-#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (mu)",25,0,100,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
-#             ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e)",25,0,100,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
-#             ["jet_Eta","muJet_idx"],r"#eta_{jet} (mu)",20,-2.8,2.8,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+           "jetMu_Pt",r"p^{soft mu}_{T} [GeV] (#mu)",25,0,25,MSEL,MCUT,dataset="smu",WCWEIGHT
+#           "jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (e)",25,0,25,ESEL,ECUT,dataset="sele",WCWEIGHT
+#             ["jet_Eta","muJet_idx"],r"eta_{jet} (#mu)",20,-2.8,2.8,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
 #             ["jet_Eta","muJet_idx"],r"#eta_{jet} (e)",20,-2.8,2.8,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
-#             ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+#             ["jet_Phi","muJet_idx"],r"phi_{jet} (#mu)",20,-3.2,3.2,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
 #             ["jet_Phi","muJet_idx"],r"#phi_{jet} (e)",20,-3.2,3.2,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
 
-               ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
-               ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
-               ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
-               ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
-#             ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,MSEL,MCUT,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,WCWEIGHT
-#             ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,ESEL,ECUT,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_e",makeROOT=True,WCWEIGHT
+             ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu)",25,0,100,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+#              ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e)",25,0,100,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
+             ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True,binWtTxt=False,WCWEIGHT
+#             ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",30,-0.2,1,ESEL,ECUT,dataset="sele",makeROOT=True,binWtTxt=False,WCWEIGHT
+             ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True,binWtTxt=False,WCWEIGHT
+#             ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",30,-0.2,1,ESEL,ECUT,dataset="sele",makeROOT=True,binWtTxt=False,WCWEIGHT
+             
+           "Z_Mass",r"M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT
+           "Z_Pt",r"p_{T}^{#mu#mu} [GeV] (#mu)",50,0,100,MSEL,MCUT,dataset="smu",WCWEIGHT
+           "Z_Pt_best",r"best p_{T}^{#mu#mu} [GeV] (#mu)",50,0,100,MSEL,MCUT,dataset="smu",WCWEIGHT
+           "Z_Mass_best",r"best M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           "Z_Mass_min",r"min M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           ["jet_neEmEF","muJet_idx"],"Jet neutral EM EF",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT
+           ["jet_muplusneEmEF","muJet_idx"],"Jet Muon + neutral EM EF",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           
+           "diLepVeto",r"Dilepton veto (#mu)",2,0,2,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           "jetMu_iso",r"Soft Muon rel. isolation (R = 0.4) (mu)",20,0,4,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           "jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (#mu)",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           
+
+           #  ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,MSEL,MCUT,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,WCWEIGHT
+           #  ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,ESEL,ECUT,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,WCWEIGHT
+#           "jet_nJet","# jets [GeV] (mu)",10,0,10,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+#           "jet_nJet","# jets [GeV] (e)",10,0,10,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
+
+            # ["E_Pt",0],r"p^{hard e}_{T} [GeV] (e)",30,0,150,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
+            # "met_Pt",r"E^{miss}_{T} (mu)",30,0,150,MSEL,MCUT,dataset="smu",WCWEIGHT
+            # "met_Pt",r"E^{miss}_{T} (e)",30,0,150,ESEL,ECUT,dataset="sele",WCWEIGHT
+
+
+
+    # Lepton selection
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu)",25,0,100,LEPSEL,LEPCUT,dataset="smu",makeROOT=True,LEPWEIGHT
+#             ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu)",30,-0.2,1,LEPSEL,LEPCUT,dataset="smu",makeROOT=True,LEPWEIGHT
+#             ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu)",30,-0.2,1,LEPSEL,LEPCUT,dataset="smu",makeROOT=True,LEPWEIGHT
+
+
 
 
     # Semileptonic TT
-#             "jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (mu)",25,0,25,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-#             "jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (e)",25,0,25,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-#             ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (mu)",25,0,100,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-#             ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e)",25,0,100,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-#             ["jet_Eta","muJet_idx"],r"#eta_{jet} (mu)",20,-2.8,2.8,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-#             ["jet_Eta","muJet_idx"],r"#eta_{jet} (e)",20,-2.8,2.8,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-#             ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-#             ["jet_Phi","muJet_idx"],r"#phi_{jet} (e)",20,-3.2,3.2,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-#               ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-#               ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-#               ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTWEIGHT
-#               ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTWEIGHT
-#            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSELM,TTCUTM,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
-#            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSELE,TTCUTE,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_e",makeROOT=True,TTWEIGHT
+            #"jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (mu)",25,0,25,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTSEMIWEIGHT
+            #"jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (e)",25,0,25,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTSEMIWEIGHT
 
-#             "met_Pt",r"E^{miss}_{T}",30,0,300,TTSEL,TTCUT,dataset="",TTWEIGHT
+#             ["jet_Eta","muJet_idx"],r"#eta_{jet} (mu)",20,-2.8,2.8,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTSEMIWEIGHT
+#             ["jet_Eta","muJet_idx"],r"#eta_{jet} (e)",20,-2.8,2.8,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTSEMIWEIGHT
+#             ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTSEMIWEIGHT
+#             ["jet_Phi","muJet_idx"],r"#phi_{jet} (e)",20,-3.2,3.2,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTSEMIWEIGHT
 
-#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu e)",20,-3.2,3.2,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
-#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu e)",20,-2.8,2.8,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
-#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu e)",28,20,300,TTSELME,TTCUTME,dataset="smu",TTWEIGHT
+                #["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (mu)",25,20,120,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTSEMIWEIGHT
+                #["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e)",25,20,120,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTSEMIWEIGHT
+                #["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu)",30,-0.2,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,binWtTxt=False,TTSEMIWEIGHT
+                #["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",30,-0.2,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,binWtTxt=False,TTSEMIWEIGHT
+                #["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu)",30,-0.2,1,TTSELM,TTCUTM,dataset="smu",makeROOT=True,binWtTxt=False,TTSEMIWEIGHT
+                #["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",30,-0.2,1,TTSELE,TTCUTE,dataset="sele",makeROOT=True,binWtTxt=False,TTSEMIWEIGHT
 
-#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (e e)",20,-3.2,3.2,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
-#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (e e)",20,-2.8,2.8,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
-#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e e)",28,20,300,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+#            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSELM,TTCUTM,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTSEMIWEIGHT
+#            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSELE,TTCUTE,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTSEMIWEIGHT
+#             "jet_nJet","# jets [GeV] (mu)",10,0,10,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTSEMIWEIGHT
+#             "jet_nJet","# jets [GeV] (mu)",10,0,10,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTSEMIWEIGHT
+            # ["E_Pt",0],r"p^{hard e}_{T} [GeV] (e)",30,0,150,dataset="sele",makeROOT=True,TTSEMIWEIGHT
 
-#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu #mu)",20,-3.2,3.2,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
-#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu #mu)",20,-2.8,2.8,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
-#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu #mu)",28,20,300,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+             # "met_Pt",r"E^{miss}_{T} (e)",30,0,150,TTSELE,TTCUTE,dataset="sele",TTSEMIWEIGHT
+            # "met_Pt",r"E^{miss}_{T} (mu)",30,0,150,TTSELM,TTCUTM,dataset="smu",TTSEMIWEIGHT
+            
+            #"jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (mu)",25,0,1,TTSELM,TTCUTM,dataset="smu",TTSEMIWEIGHT
+            #"jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (e)",25,0,1,TTSELE,TTCUTE,dataset="sele",TTSEMIWEIGHT
 
-#              ["jet_CvsL","muJet_idx"],"Jet CvsL",25,0,1,TTSEL,TTCUT,dataset="",makeROOT=True,TTWEIGHT
-#              ["jet_CvsB","muJet_idx"],"Jet CvsB",25,0,1,TTSEL,TTCUT,dataset="",makeROOT=True,TTWEIGHT
-#            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSEL,TTCUT,dataset="",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu e)",20,-3.2,3.2,TTSELME,TTCUTME,dataset="smu",TTSEMIWEIGHT
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu e)",20,-2.8,2.8,TTSELME,TTCUTME,dataset="smu",TTSEMIWEIGHT
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu e)",28,20,300,TTSELME,TTCUTME,dataset="smu",TTSEMIWEIGHT
+
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (e e)",20,-3.2,3.2,TTSELEE,TTCUTEE,dataset="deg",TTSEMIWEIGHT
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (e e)",20,-2.8,2.8,TTSELEE,TTCUTEE,dataset="deg",TTSEMIWEIGHT
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e e)",28,20,300,TTSELEE,TTCUTEE,dataset="deg",TTSEMIWEIGHT
+
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (#mu #mu)",20,-3.2,3.2,TTSELMM,TTCUTMM,dataset="dmu",TTSEMIWEIGHT
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (#mu #mu)",20,-2.8,2.8,TTSELMM,TTCUTMM,dataset="dmu",TTSEMIWEIGHT
+#            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu #mu)",28,20,300,TTSELMM,TTCUTMM,dataset="dmu",TTSEMIWEIGHT
+
+#              ["jet_CvsL","muJet_idx"],"Jet CvsL",30,-0.2,1,TTSEL,TTCUT,dataset="",makeROOT=True,TTSEMIWEIGHT
+#              ["jet_CvsB","muJet_idx"],"Jet CvsB",30,-0.2,1,TTSEL,TTCUT,dataset="",makeROOT=True,TTSEMIWEIGHT
+#            ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,TTSEL,TTCUT,dataset="",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTSEMIWEIGHT
 
 
 
     # Dileptonic TT
-            ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="mue",makeROOT=True,TTWEIGHT
-            ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="mue",makeROOT=True,TTWEIGHT
-#            ["jet_CvsL",0],"CvsL",5,0,1,TTSELME,TTCUTME,dataset="smu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
-#           
-            ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",makeROOT=True,TTWEIGHT
-            ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",makeROOT=True,TTWEIGHT
-#            ["jet_CvsL",0],"CvsL",5,0,1,TTSELMM,TTCUTMM,dataset="dmu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
-#           
-            ["jet_CvsL","muJet_idx"],r"Jet CvsL (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",makeROOT=True,TTWEIGHT
-            ["jet_CvsB","muJet_idx"],r"Jet CvsB (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",makeROOT=True,TTWEIGHT
-#            ["jet_CvsL",0],"CvsL",5,0,1,TTSELEE,TTCUTEE,dataset="deg",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
+            #["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu e)",36,20,200,TTSELME,TTCUTME,dataset="mue",TTWEIGHT
+            #["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu e)",30,-0.2,1,TTSELME,TTCUTME,dataset="mue",makeROOT=True,binWtTxt=False,TTWEIGHT
+            #["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu e)",30,-0.2,1,TTSELME,TTCUTME,dataset="mue",makeROOT=True,binWtTxt=False,TTWEIGHT
+           # ["jet_CvsL",0],"CvsL",5,0,1,TTSELME,TTCUTME,dataset="smu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
+
+          #["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu #mu)",25,20,120,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+            #["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu #mu)",30,-0.2,1,TTSELMM,TTCUTMM,dataset="dmu",makeROOT=True,binWtTxt=False,TTWEIGHT
+            #["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu #mu)",30,-0.2,1,TTSELMM,TTCUTMM,dataset="dmu",makeROOT=True,binWtTxt=False,TTWEIGHT
+           # ["jet_CvsL",0],"CvsL",5,0,1,TTSELMM,TTCUTMM,dataset="dmu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
+
+          #["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e e)",25,20,120,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+            #["jet_CvsL","muJet_idx"],r"Jet CvsL (e e)",30,-0.2,1,TTSELEE,TTCUTEE,dataset="deg",makeROOT=True,binWtTxt=False,TTWEIGHT
+            #["jet_CvsB","muJet_idx"],r"Jet CvsB (e e)",30,-0.2,1,TTSELEE,TTCUTEE,dataset="deg",makeROOT=True,binWtTxt=False,TTWEIGHT
+           # ["jet_CvsL",0],"CvsL",5,0,1,TTSELEE,TTCUTEE,dataset="deg",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,TTWEIGHT
+
+           #"Z_Mass",r"M_{#mu#mu} [GeV] (#mu #mu)",30,0,180,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+           #"Z_Pt",r"p_{T}^{#mu#mu} [GeV] (#mu #mu)",30,0,180,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+           #"Z_Mass",r"M_{ee} [GeV] (e e)",30,0,180,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+           #"Z_Pt",r"p_{T}^{ee} [GeV] (e e)",30,0,180,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
+           
+           #"jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (#mu #mu)",25,0,1,TTSELMM,TTCUTMM,dataset="dmu",TTWEIGHT
+           #"jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (#mu e)",25,0,1,TTSELME,TTCUTME,dataset="mue",TTWEIGHT
+           #"jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (e e)",25,0,1,TTSELEE,TTCUTEE,dataset="deg",TTWEIGHT
 
 
         # DY
-#           "met_Pt",r"E^{miss}_{T}",25,0,100,dataset="dmu",DYWEIGHT
-#             ["jet_Phi",0],r"#phi_{jet}",20,-3.2,3.2,dataset="dmu",DYWEIGHT
-#             ["jet_Eta",0],r"#eta_{jet}",20,-2.8,2.8,dataset="dmu",DYWEIGHT
-#             ["jet_Pt",0],r"p^{jet}_{T} [GeV]",25,0,100,dataset="dmu",DYWEIGHT
-              ["jet_CvsL",0],"Jet CvsL",25,0,1,dataset="dmu",makeROOT=True,DYWEIGHT
-              ["jet_CvsB",0],"Jet CvsB",25,0,1,dataset="dmu",makeROOT=True,DYWEIGHT
-#            ["jet_CvsL",0],"CvsL",5,0,1,dataset="dmu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,DYWEIGHT
+
+             #["jet_Pt",0],r"p^{jet}_{T} [GeV] (#mu#mu)",50,20,120,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+              #["jet_CvsL",0],"Jet CvsL (#mu#mu)",30,-0.2,1,DYSELM,DYCUTM,dataset="dmu",makeROOT=True,binWtTxt=False,DYWEIGHT
+              #["jet_CvsB",0],"Jet CvsB (#mu#mu)",30,-0.2,1,DYSELM,DYCUTM,dataset="dmu",makeROOT=True,binWtTxt=False,DYWEIGHT
+              
+              #"jet_nJet","# jets (#mu#mu)",10,0,10,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+             #"Z_Mass",r"M_{#mu#mu} [GeV] (#mu#mu)",60,75,105,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+             #"Z_Pt",r"p_{T}^{#mu#mu} [GeV] (#mu#mu)",50,0,50,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+             #"Z_Pt",r"p_{T}^{#mu#mu} [GeV] (#mu#mu)",50,0,150,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT,filePre2="Extend"
+             
+             #["M_Pt",0],r"p^{#mu1}_{T} [GeV] (#mu#mu)",50,0,100,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            #["M_Pt",1],r"p^{#mu2}_{T} [GeV] (#mu#mu)",50,0,100,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+
+#            ["jet_CvsL",0],"CvsL",5,0,1,DYSELM,DYCUTM,dataset="dmu",brName2D=["jet_CvsB",0],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,DYWEIGHT
+
+            # "met_Pt",r"E^{miss}_{T} (#mu#mu)",25,0,100,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            #  ["jet_Phi",0],r"#phi_{jet} (#mu#mu)",20,-3.2,3.2,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            #  ["jet_Eta",0],r"#eta_{jet} (#mu#mu)",20,-2.8,2.8,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            # 
+            #  "nPVGood","Number of good reconstructed PVs (#mu#mu)",70,0,70,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            #  "nPVGood","Number of good reconstructed PVs (no PU rw) (#mu#mu)",70,0,70,DYSELM,DYCUTM,dataset="dmu",DYWEIGHTNOPU
+            #  ["jet_muPtRatio",0],r"p_{T}^{#mu}/p_{T}^{jet} (#mu#mu)",40,-1,1,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            # 
+            # "dR_Z_jet",r"#deltaR_{Z,jet} (#mu#mu)",30,0,5,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            # "dR_mu_jet_min",r"min. #deltaR_{#mu,jet} (#mu#mu)",30,0,5,DYSELM,DYCUTM,dataset="dmu",DYWEIGHT
+            
+            #["jet_Pt",0],r"p^{jet}_{T} [GeV] (ee)",50,20,120,DYSELE,DYCUTE,dataset="deg",DYWEIGHT
+              #["jet_CvsL",0],"Jet CvsL (ee)",30,-0.2,1,DYSELE,DYCUTE,dataset="deg",makeROOT=True,binWtTxt=False,DYWEIGHT
+              #["jet_CvsB",0],"Jet CvsB (ee)",30,-0.2,1,DYSELE,DYCUTE,dataset="deg",makeROOT=True,binWtTxt=False,DYWEIGHT
+              
+              #"jet_nJet","# jets (ee)",10,0,10,DYSELE,DYCUTE,dataset="deg",DYWEIGHT
+             #"Z_Mass",r"M_{ee} [GeV] (ee)",60,75,105,DYSELE,DYCUTE,dataset="deg",DYWEIGHT
+             #"Z_Pt",r"p_{T}^{ee} [GeV] (ee)",50,0,50,DYSELE,DYCUTE,dataset="deg",DYWEIGHT
+             #"Z_Pt",r"p_{T}^{ee} [GeV] (ee)",50,0,150,DYSELE,DYCUTE,dataset="deg",DYWEIGHT,filePre2="Extend"
+             
+              #["E_Pt",0],r"p^{#mu1}_{T} [GeV] (ee)",50,0,100,DYSELE,DYCUTE,dataset="deg",DYWEIGHT
+              #["E_Pt",1],r"p^{#mu2}_{T} [GeV] (ee)",50,0,100,DYSELE,DYCUTE,dataset="deg",DYWEIGHT
+            
             '''
 
 
@@ -173,10 +271,10 @@ LegacyArguments =
 
 
 
-            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (mu)",25,0,100,DYSEL,DYCUT,dataset="smu"
-#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (mu)",20,-2.8,2.8,DYSEL,DYCUT,dataset="smu"
-#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,DYSEL,DYCUT,dataset="smu"
-#            ["jet_Mass","muJet_idx"],r"m_{jet} [GeV] (mu)",20,0,40,DYSEL,DYCUT,dataset="smu"
+            ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (mu)",25,0,100,DYSELM,DYCUTM,dataset="smu"
+#            ["jet_Eta","muJet_idx"],r"#eta_{jet} (mu)",20,-2.8,2.8,DYSELM,DYCUTM,dataset="smu"
+#            ["jet_Phi","muJet_idx"],r"#phi_{jet} (mu)",20,-3.2,3.2,DYSELM,DYCUTM,dataset="smu"
+#            ["jet_Mass","muJet_idx"],r"m_{jet} [GeV] (mu)",20,0,40,DYSELM,DYCUTM,dataset="smu"
 
 
 
@@ -187,20 +285,20 @@ LegacyArguments =
 #            ["jet_btagCMVA","muJet_idx"],r"Jet cMVAv2 (mu)",25,-1,1,MSEL,MCUT,dataset="smu"
 #            ["jet_btagCMVA","muJet_idx"],r"Jet cMVAv2 (e)",25,-1,1,ESEL,ECUT,dataset="sele"
 
-#            ["jet_btagCSVV2","muJet_idx"],r"Jet CSVv2 (mu)",25,0,1,MSEL,MCUT,dataset="smu"
-#            ["jet_btagCSVV2","muJet_idx"],r"Jet CSVv2 (e)",25,0,1,ESEL,ECUT,dataset="sele"
+#            ["jet_btagCSVV2","muJet_idx"],r"Jet CSVv2 (mu)",30,-0.2,1,MSEL,MCUT,dataset="smu"
+#            ["jet_btagCSVV2","muJet_idx"],r"Jet CSVv2 (e)",30,-0.2,1,ESEL,ECUT,dataset="sele"
 
-#            ["jet_btagDeepB","muJet_idx"],r"Jet DeepCSV b+bb (mu)",25,0,1,MSEL,MCUT,dataset="smu"
-#            ["jet_btagDeepB","muJet_idx"],r"Jet DeepCSV b+bb (e)",25,0,1,ESEL,ECUT,dataset="sele"
+#            ["jet_btagDeepB","muJet_idx"],r"Jet DeepCSV b+bb (mu)",30,-0.2,1,MSEL,MCUT,dataset="smu"
+#            ["jet_btagDeepB","muJet_idx"],r"Jet DeepCSV b+bb (e)",30,-0.2,1,ESEL,ECUT,dataset="sele"
 
-#            ["jet_btagDeepC","muJet_idx"],r"Jet DeepCSV c (mu)",25,0,1,MSEL,MCUT,dataset="smu"
-#            ["jet_btagDeepC","muJet_idx"],r"Jet DeepCSV c (e)",25,0,1,ESEL,ECUT,dataset="sele"
+#            ["jet_btagDeepC","muJet_idx"],r"Jet DeepCSV c (mu)",30,-0.2,1,MSEL,MCUT,dataset="smu"
+#            ["jet_btagDeepC","muJet_idx"],r"Jet DeepCSV c (e)",30,-0.2,1,ESEL,ECUT,dataset="sele"
 
-#            ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True
-#           ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True
+#            ["jet_CvsL","muJet_idx"],r"Jet CvsL (mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True
+#           ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",30,-0.2,1,ESEL,ECUT,dataset="sele",makeROOT=True
 
-#           ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",25,0,1,MSEL,MCUT,dataset="smu",makeROOT=True
-#           ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",25,0,1,ESEL,ECUT,dataset="sele",makeROOT=True
+#           ["jet_CvsB","muJet_idx"],r"Jet CvsB (mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True
+#           ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",30,-0.2,1,ESEL,ECUT,dataset="sele",makeROOT=True
 
 #           ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,MSEL,MCUT,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_m",makeROOT=True
 #           ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,ESEL,ECUT,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",filePre="2D_e",makeROOT=True
@@ -371,7 +469,7 @@ LegacyArguments =
             '''
 args=[applyCuts(line.strip()) for line in arguments.split("\n") if not line.strip()=="" and not line.strip().startswith("#")]
 
-if len(args)<2:
+if len(args)<1:
     # Interactive
     for line in args:
         exec("Stacker.plotStack("+line.strip()+")")
@@ -386,4 +484,4 @@ else:
         tempPy.close()
         os.system("nohup python -u tempPy.py &> stackerLogs/"+str(int(i+start_idx))+".log &")
         print "Submitted %d jobs: "%(i+start_idx) + line.strip()
-        time.sleep(2)
+        time.sleep(0.5)

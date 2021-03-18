@@ -1,5 +1,5 @@
-	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_190403_pt20_BinnedKins/
-	OUTPUTNAME=190403_pt20
+	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_210225_MuBiasTestSemiTcEnrNoBTagger/
+	OUTPUTNAME=output_2017
 
 	CONDOR_CLUSTER_ID=$1
 	CONDOR_PROCESS_ID=$2
@@ -14,10 +14,10 @@
 
         echo "creating tempdir and copy"
         tmp_dir=$(mktemp -d)
-        cp -r ../Stacker.py cmdList.txt ../SFs*.root $tmp_dir
+        cp -r ../Stacker.py cmdList.txt ../Deep*.root ../samplesDict.py $tmp_dir
 
         echo "setting up the environment"
-        cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_10_2_0_pre6/src
+        cd /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_11_1_0_p3_ROOT618/src/
         source /cvmfs/cms.cern.ch/cmsset_default.sh
         eval `scramv1 runtime -sh`
         echo "echo PATH:"
@@ -30,7 +30,7 @@
         ls
 	
     	echo "running python script"
-        python -c "import Stacker; f=open('cmdList.txt','r'); ln=f.readlines(); exec(ln["$2"])"
+        python -c $'import Stacker; f=open("cmdList.txt","r"); ln=f.readlines(); thisline=ln['$2$'];\nfor cmd in thisline.split("NEWLINE"): exec(cmd)'
        	rc=$?
         if [[ $rc != 0 ]]
         then

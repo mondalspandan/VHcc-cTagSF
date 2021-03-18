@@ -1,10 +1,10 @@
 universe = vanilla
-Executable = condor_runscript.sh
+Executable = condor_runscript_common.sh
 Output = condor/log-$(ClusterId).$(ProcId).out
 Error  = condor/log-$(ClusterId).$(ProcId).err
 Log    = condor/log-$(ClusterId).$(ProcId).log
 
-arguments    = $(ClusterId) $(ProcId) $(INFILE)
+arguments    = $(ClusterId) $(ProcId) $(INFILE) $(SEL)
 
 Notification = never
 on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
