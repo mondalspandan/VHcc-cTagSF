@@ -69,7 +69,7 @@ def getbrText(brName):
     else:
         return brName.replace('[','_').rstrip(']')
 
-def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selections="", divideByFlav=False, brName2D="",nbins2=5,start2=0,end2=1,varBin1=[],varBin2=[],getSFUnc=False):
+def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selections="", divideByFlav=False, brName2D="",nbins2=5,start2=0,end2=1,varBin1=[],varBin2=[],getSFUnc=False,customJetInd=""):
     if "|" in dir:                      # dir can be one directory string, or dir = "dir1|dir2|dir3|..."
         dirList = dir.split("|")
     else:
@@ -209,7 +209,9 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     
     if divideByFlav:
         myHisto = []
-        if "jet_" in brName and '[' in brName:
+        if customJetInd != "":
+            jetind = customJetInd
+        elif "jet_" in brName and '[' in brName:
             jetind = brName.split('[')[1].split(']')[0]
         else:
             jetind = "max(0.,muJet_idx)"
@@ -363,7 +365,7 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     
     return myHisto.Clone(), nTotalEvents
 
-def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="",filePre2="",filePost="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makePNG=True,makeROOT=False,noRatio=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",SFhistSuff="",drawDataMCRatioLine=False,normTotalMC=False,binWtTxt=False, getSFUnc = False):
+def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="",filePre2="",filePost="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makePNG=True,makeROOT=False,noRatio=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",SFhistSuff="",drawDataMCRatioLine=False,normTotalMC=False,binWtTxt=False,getSFUnc = False,customJetInd=""):
     if not makePNG and not makeROOT:
         print "Neither PNG nor ROOT output was asked for. Exiting."
         sys.exit(1)
@@ -648,7 +650,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         for dir in AllSamplePaths:
             flName = dir.split('/')[-1]
             print "Starting with "+dir
-            histo, nTot = makeHisto(dir,"Events",brName,brLabel,nbins,start,end,weightName=MCWeightName,divideByFlav=True,selections=selections,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),getSFUnc=getSFUnc)
+            histo, nTot = makeHisto(dir,"Events",brName,brLabel,nbins,start,end,weightName=MCWeightName,divideByFlav=True,selections=selections,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),getSFUnc=getSFUnc,customJetInd=customJetInd)
             for idx in range(4):
                 allHists.append(histo[idx].Clone())
                 integrals.append(nTot)

@@ -203,10 +203,10 @@ plot1D = '''
         #    "jet_CvsB[semitc1idx]",r"Probe Jet DeepCSV CvsB (#mu) (OS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight > 0",filePost="OS",dataset="smu",makeROOT=True,TTSEMIWEIGHT
         #    "jet_CvsB[semitc1idx]",r"Probe Jet DeepCSV CvsB (e) (OS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight > 0",filePost="OS",dataset="sele",makeROOT=True,TTSEMIWEIGHT
 
-           "jet_CvsL[semitc1idx]",r"Probe Jet DeepCSV CvsL (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0",dataset="smu",makeROOT=True,TTSEMIWEIGHT
-           "jet_CvsL[semitc1idx]",r"Probe Jet DeepCSV CvsL (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0",dataset="sele",makeROOT=True,TTSEMIWEIGHT
-           "jet_CvsB[semitc1idx]",r"Probe Jet DeepCSV CvsB (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0",dataset="smu",makeROOT=True,TTSEMIWEIGHT
-           "jet_CvsB[semitc1idx]",r"Probe Jet DeepCSV CvsB (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0",dataset="sele",makeROOT=True,TTSEMIWEIGHT
+           "jet_CvsL[semitc1idx]",r"Probe Jet DeepCSV CvsL (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,TTSEMIWEIGHT
+           "jet_CvsL[semitc1idx]",r"Probe Jet DeepCSV CvsL (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,TTSEMIWEIGHT
+           "jet_CvsB[semitc1idx]",r"Probe Jet DeepCSV CvsB (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,TTSEMIWEIGHT
+           "jet_CvsB[semitc1idx]",r"Probe Jet DeepCSV CvsB (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,TTSEMIWEIGHT
            
             
             
@@ -259,10 +259,37 @@ plot1D = '''
         #    "jet_DeepFlavCvsB[semitc1idx]",r"Probe Jet DeepJet CvsB (#mu) (OS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight > 0",filePost="OS",dataset="smu",makeROOT=True,TTSEMIWEIGHT
         #    "jet_DeepFlavCvsB[semitc1idx]",r"Probe Jet DeepJet CvsB (e) (OS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight > 0",filePost="OS",dataset="sele",makeROOT=True,TTSEMIWEIGHT
 
-           "jet_DeepFlavCvsL[semitc1idx]",r"Probe Jet DeepJet CvsL (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0",dataset="smu",makeROOT=True,TTSEMIWEIGHT
-           "jet_DeepFlavCvsL[semitc1idx]",r"Probe Jet DeepJet CvsL (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0",dataset="sele",makeROOT=True,TTSEMIWEIGHT
-           "jet_DeepFlavCvsB[semitc1idx]",r"Probe Jet DeepJet CvsB (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0",dataset="smu",makeROOT=True,TTSEMIWEIGHT
-           "jet_DeepFlavCvsB[semitc1idx]",r"Probe Jet DeepJet CvsB (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0",dataset="sele",makeROOT=True,TTSEMIWEIGHT
+           "jet_DeepFlavCvsL[semitc1idx]",r"Probe Jet DeepJet CvsL (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,TTSEMIWEIGHT
+           "jet_DeepFlavCvsL[semitc1idx]",r"Probe Jet DeepJet CvsL (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,TTSEMIWEIGHT
+           "jet_DeepFlavCvsB[semitc1idx]",r"Probe Jet DeepJet CvsB (#mu) (SS)",NBINDISC,-0.2,1,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,TTSEMIWEIGHT
+           "jet_DeepFlavCvsB[semitc1idx]",r"Probe Jet DeepJet CvsB (e) (SS)",NBINDISC,-0.2,1,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,TTSEMIWEIGHT
+
+           "semitChi2",r"#Delta^2 (#mu) (SS)",50,0,2000,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+           "semitChi2",r"#Delta^2 (e) (SS)",50,0,2000,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+           "semitWCandMass",r"M_W (#mu) (SS)",50,30,130,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+           "semitWCandMass",r"M_W (e) (SS)",50,30,130,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+           "semittCandMass",r"M_{top} (#mu) (SS)",50,50,250,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+           "semittCandMass",r"M_{top} (e) (SS)",50,50,250,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+           "semitWCandpT",r"p_T^W (#mu) (SS)",50,0,150,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+           "semitWCandpT",r"p_T^W (e) (SS)",50,0,150,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+           "semittCandpT",r"p_T^{top} (#mu) (SS)",50,0,150,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+           "semittCandpT",r"p_T^{top} (e) (SS)",50,0,150,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+        "jet_Pt[semitc1idx]",r"Probe jet p_T (#mu) (SS)",50,20,120,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+        "jet_Pt[semitc1idx]",r"Probe jet p_T (e) (SS)",50,20,120,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+        "jet_Eta[semitc1idx]",r"Probe jet #eta (#mu) (SS)",20,-2.8,2.8,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+        "jet_Eta[semitc1idx]",r"Probe jet #eta (e) (SS)",20,-2.8,2.8,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+        "jet_Phi[semitc1idx]",r"Probe jet #phi (#mu) (SS)",20,-3.2,3.2,TTSEMISELM+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="smu",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+        "jet_Phi[semitc1idx]",r"Probe jet #phi (e) (SS)",20,-3.2,3.2,TTSEMISELE+"&& signWeight < 0  && semitWCandMass > 65 && semitWCandMass < 105 && semittCandMass > 140 && semittCandMass < 210",dataset="sele",makeROOT=True,customJetInd="semitc1idx",TTSEMIWEIGHT
+
+           
+           
 '''
 
 onlyCentral = '''
