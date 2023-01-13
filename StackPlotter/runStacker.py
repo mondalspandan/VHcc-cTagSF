@@ -10,7 +10,7 @@ import os, time, sys, Stacker
 
 DYPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190708_2017_DY/"
 TTPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190708_2017_TT/"
-WcPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190727_2017_Wc_2/"
+WcPath = "/nfs/dust/cms/user/spmondal/ctag_condor/190805_2017_Wc/"
 
 if len(sys.argv) > 1:
     start_idx = 1 + float(sys.argv[1])
@@ -79,37 +79,41 @@ def applyCuts(ln,reg=""):
 
 arguments = '''
     # Wc selection
-           "jetMu_Pt",r"p^{soft mu}_{T} [GeV] (#mu)",25,0,25,MSEL,MCUT,dataset="smu",WCWEIGHT
+           #"jetMu_Pt",r"p^{soft mu}_{T} [GeV] (#mu)",25,0,25,MSEL,MCUT,dataset="smu",WCWEIGHT
 #           "jetMu_Pt",r"p^{soft #mu}_{T} [GeV] (e)",25,0,25,ESEL,ECUT,dataset="sele",WCWEIGHT
 #             ["jet_Eta","muJet_idx"],r"eta_{jet} (#mu)",20,-2.8,2.8,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
 #             ["jet_Eta","muJet_idx"],r"#eta_{jet} (e)",20,-2.8,2.8,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
 #             ["jet_Phi","muJet_idx"],r"phi_{jet} (#mu)",20,-3.2,3.2,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
 #             ["jet_Phi","muJet_idx"],r"#phi_{jet} (e)",20,-3.2,3.2,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
 
-             ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu)",25,0,100,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
+             #["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (#mu)",25,0,100,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
 #              ["jet_Pt","muJet_idx"],r"p^{jet}_{T} [GeV] (e)",25,0,100,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
-             ["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True,binWtTxt=False,WCWEIGHT
+             #["jet_CvsL","muJet_idx"],r"Jet CvsL (#mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True,binWtTxt=False,WCWEIGHT
 #             ["jet_CvsL","muJet_idx"],r"Jet CvsL (e)",30,-0.2,1,ESEL,ECUT,dataset="sele",makeROOT=True,binWtTxt=False,WCWEIGHT
-             ["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True,binWtTxt=False,WCWEIGHT
+             #["jet_CvsB","muJet_idx"],r"Jet CvsB (#mu)",30,-0.2,1,MSEL,MCUT,dataset="smu",makeROOT=True,binWtTxt=False,WCWEIGHT
 #             ["jet_CvsB","muJet_idx"],r"Jet CvsB (e)",30,-0.2,1,ESEL,ECUT,dataset="sele",makeROOT=True,binWtTxt=False,WCWEIGHT
              
-           "Z_Mass",r"M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT
-           "Z_Pt",r"p_{T}^{#mu#mu} [GeV] (#mu)",50,0,100,MSEL,MCUT,dataset="smu",WCWEIGHT
-           "Z_Pt_best",r"best p_{T}^{#mu#mu} [GeV] (#mu)",50,0,100,MSEL,MCUT,dataset="smu",WCWEIGHT
-           "Z_Mass_best",r"best M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
-           "Z_Mass_min",r"min M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
-           ["jet_neEmEF","muJet_idx"],"Jet neutral EM EF",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT
-           ["jet_muplusneEmEF","muJet_idx"],"Jet Muon + neutral EM EF",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #"Z_Mass",r"M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT
+           #"Z_Pt",r"p_{T}^{#mu#mu} [GeV] (#mu)",50,0,100,MSEL,MCUT,dataset="smu",WCWEIGHT
+           #"Z_Pt_best",r"best p_{T}^{#mu#mu} [GeV] (#mu)",50,0,100,MSEL,MCUT,dataset="smu",WCWEIGHT
+           #"Z_Mass_best",r"best M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #"Z_Mass_min",r"min M_{#mu#mu} [GeV] (#mu)",40,0,120,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #["jet_neEmEF","muJet_idx"],"Jet neutral EM EF",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT
+           #["jet_muplusneEmEF","muJet_idx"],"Jet Muon + neutral EM EF",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #["jet_puId","muJet_idx"],"Jet PU ID",8,0,8,MSEL,MCUT,dataset="smu",WCWEIGHT
+           #"diLepVeto",r"Dilepton veto (#mu)",2,0,2,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #"jetMu_iso",r"Soft Muon rel. isolation (R = 0.4) (mu)",20,0,4,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #"jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (#mu)",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
            
-           "diLepVeto",r"Dilepton veto (#mu)",2,0,2,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
-           "jetMu_iso",r"Soft Muon rel. isolation (R = 0.4) (mu)",20,0,4,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
-           "jetMuPt_by_jetPt",r"p^{soft #mu}_{T}/p^{jet}_{T} (#mu)",25,0,1,MSEL,MCUT,dataset="smu",WCWEIGHT,nminus1=True
+           #"LHE_Vpt","LHE p_T^V",40,0,200,MSEL,MCUT,WCWEIGHT
+           #"LHE_Vpt","LHE p_T^V",40,0,200,ESEL,ECUT,WCWEIGHT
            
 
            #  ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,MSEL,MCUT,dataset="smu",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,WCWEIGHT
            #  ["jet_CvsL","muJet_idx"],"CvsL",5,0,1,ESEL,ECUT,dataset="sele",brName2D=["jet_CvsB","muJet_idx"],brLabel2="CvsB",nbins2=5,CVXBINNING,drawStyle="",makeROOT=True,WCWEIGHT
-#           "jet_nJet","# jets [GeV] (mu)",10,0,10,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT
-#           "jet_nJet","# jets [GeV] (e)",10,0,10,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
+           
+          "jet_nJet","# jets [GeV] (mu)",10,0,10,MSEL,MCUT,dataset="smu",makeROOT=True,WCWEIGHT,nminus1=True
+          "jet_nJet","# jets [GeV] (e)",10,0,10,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT,nminus1=True
 
             # ["E_Pt",0],r"p^{hard e}_{T} [GeV] (e)",30,0,150,ESEL,ECUT,dataset="sele",makeROOT=True,WCWEIGHT
             # "met_Pt",r"E^{miss}_{T} (mu)",30,0,150,MSEL,MCUT,dataset="smu",WCWEIGHT
@@ -146,6 +150,9 @@ arguments = '''
 #             "jet_nJet","# jets [GeV] (mu)",10,0,10,TTSELM,TTCUTM,dataset="smu",makeROOT=True,TTSEMIWEIGHT
 #             "jet_nJet","# jets [GeV] (mu)",10,0,10,TTSELE,TTCUTE,dataset="sele",makeROOT=True,TTSEMIWEIGHT
             # ["E_Pt",0],r"p^{hard e}_{T} [GeV] (e)",30,0,150,dataset="sele",makeROOT=True,TTSEMIWEIGHT
+            
+            "jet_nJet","# jets [GeV] (mu)",10,0,10,TTSELM,TTCUTM,dataset="smu",TTSEMIWEIGHT,makeROOT=True,nminus1=True
+            "jet_nJet","# jets [GeV] (e)",10,0,10,TTSELE,TTCUTE,dataset="sele",TTSEMIWEIGHT,makeROOT=True,nminus1=True
 
              # "met_Pt",r"E^{miss}_{T} (e)",30,0,150,TTSELE,TTCUTE,dataset="sele",TTSEMIWEIGHT
             # "met_Pt",r"E^{miss}_{T} (mu)",30,0,150,TTSELM,TTCUTM,dataset="smu",TTSEMIWEIGHT

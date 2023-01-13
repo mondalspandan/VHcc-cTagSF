@@ -1,0 +1,6 @@
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHccPostV11_Nanov5_Jul19/2018/WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv5-Nano1Ju22/190802_131005/0000/tree_1.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHccPostV11_Nanov5_Jul19/2018/WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv5-Nano1Ju22/190802_131005/0000/tree_2.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHccPostV11_Nanov5_Jul19/2018/WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv5-Nano1Ju22/190802_131005/0000/tree_3.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHccPostV11_Nanov5_Jul19/2018/WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv5-Nano1Ju23/190802_131051/0000/tree_1.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHccPostV11_Nanov5_Jul19/2018/WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv5-Nano1Ju23/190802_131051/0000/tree_2.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHccPostV11_Nanov5_Jul19/2018/WminusH_HToBB_WToLNu_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv5-Nano1Ju23/190802_131051/0000/tree_3.root

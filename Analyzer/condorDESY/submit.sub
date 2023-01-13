@@ -1,11 +1,15 @@
 universe = vanilla
 Executable = condor_runscript_common_NoJEC.sh
-Output = condor/log-$(ClusterId).$(ProcId).out
-Error  = condor/log-$(ClusterId).$(ProcId).err
-Log    = condor/log-$(ClusterId).$(ProcId).log
+Output = /nfs/dust/cms/user/spmondal/condor_logs/log-$(ClusterId).$(ProcId).out
+Error  = /nfs/dust/cms/user/spmondal/condor_logs/log-$(ClusterId).$(ProcId).err
+Log    = /nfs/dust/cms/user/spmondal/condor_logs/log-$(ClusterId).$(ProcId).log
 
 arguments    = $(ClusterId) $(ProcId) $(INFILE) $(SEL)
 
+request_cpus = 2
+#+RequestRuntime = 200000
+#use_x509userproxy = true
+max_materialize = 5000
 Notification = never
 on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
 

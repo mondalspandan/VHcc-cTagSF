@@ -1,0 +1,2 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZZ_TuneCUETP8M1_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR100/181118_095822/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZZ_TuneCUETP8M1_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR99/181118_095758/0000/tree_1.root

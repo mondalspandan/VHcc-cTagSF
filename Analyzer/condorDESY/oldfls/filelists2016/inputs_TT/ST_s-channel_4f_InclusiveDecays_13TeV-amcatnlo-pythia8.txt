@@ -1,0 +1,4 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_s-channel_4f_InclusiveDecays_13TeV-amcatnlo-pythia8/arizzi-RunIIMoriond17-DeepAndR146/181118_101718/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_s-channel_4f_InclusiveDecays_13TeV-amcatnlo-pythia8/arizzi-RunIIMoriond17-DeepAndR146/181118_101718/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_s-channel_4f_InclusiveDecays_13TeV-amcatnlo-pythia8/arizzi-RunIIMoriond17-DeepAndR146/181118_101718/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_s-channel_4f_InclusiveDecays_13TeV-amcatnlo-pythia8/arizzi-RunIIMoriond17-DeepAndR146/181118_101718/0000/tree_4.root

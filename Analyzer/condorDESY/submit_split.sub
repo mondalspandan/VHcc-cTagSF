@@ -1,11 +1,17 @@
 universe = vanilla
 Executable = condor_runscript_common_splitJEC.sh
-Output = condor/log-$(ClusterId).$(ProcId).out
-Error  = condor/log-$(ClusterId).$(ProcId).err
-Log    = condor/log-$(ClusterId).$(ProcId).log
+#Output = condor/log-$(ClusterId).$(ProcId).out
+#Error  = condor/log-$(ClusterId).$(ProcId).err
+#Log    = condor/log-$(ClusterId).$(ProcId).log
+Output = /nfs/dust/cms/user/spmondal/condor_logs/log-$(ClusterId).$(ProcId).out
+Error  = /nfs/dust/cms/user/spmondal/condor_logs/log-$(ClusterId).$(ProcId).err
+Log    = /nfs/dust/cms/user/spmondal/condor_logs/log-$(ClusterId).$(ProcId).log
 
 arguments    = $(ClusterId) $(ProcId) $(INFILE) $(SEL) $(JEC)
 
+request_cpus = 2
++RequestRuntime = 200000
+max_materialize = 5000
 Notification = never
 on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
 

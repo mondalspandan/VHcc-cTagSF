@@ -1,0 +1,2 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-1200To2500_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR117/181118_100524/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-1200To2500_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR118/181118_100548/0000/tree_1.root

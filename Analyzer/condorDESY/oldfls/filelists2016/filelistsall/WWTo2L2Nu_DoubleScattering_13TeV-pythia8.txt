@@ -1,0 +1,5 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo2L2Nu_DoubleScattering_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR108/181118_100142/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo2L2Nu_DoubleScattering_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR108/181118_100142/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo2L2Nu_DoubleScattering_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR108/181118_100142/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo2L2Nu_DoubleScattering_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR108/181118_100142/0000/tree_4.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/WWTo2L2Nu_DoubleScattering_13TeV-pythia8/arizzi-RunIIMoriond17-DeepAndR108/181118_100142/0000/tree_5.root

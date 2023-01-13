@@ -17,6 +17,7 @@ gStyle.SetLegendBorderSize(0)
 from samplesDict import *
 
 TH1DModel = ROOT.RDF.TH1DModel
+TH2DModel = ROOT.RDF.TH2DModel
 
 lumi = 35900
 # outDir="Plots_190116_3mva80rewt_OS-SS_MuPtJetPtRatioCut_noQCD_RelIso_hardLepJetPtRatio_dxyz_sip3d_nJet/"
@@ -33,6 +34,8 @@ splitbypT = True
 
 splitDYbyHT = False
 splitWbynJets = False
+splitWbynJetsNLO = False
+splitWbyVPt = False
 
 taggerPref = ""
 makeBinWtTxt = False
@@ -69,7 +72,7 @@ def getbrText(brName):
     else:
         return brName.replace('[','_').rstrip(']')
 
-def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selections="", divideByFlav=False, brName2D="",nbins2=5,start2=0,end2=1,varBin1=[],varBin2=[],getSFUnc=False,customJetInd=""):
+def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selections="", divideByFlav=False, brName2D="",nbins2=5,start2=0,end2=1,varBin1=[],varBin2=[],getSFUnc=False,customJetInd="",useEventCount=False,ptwt="1.",filePre=""):
     if "|" in dir:                      # dir can be one directory string, or dir = "dir1|dir2|dir3|..."
         dirList = dir.split("|")
     else:
@@ -83,11 +86,12 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     for fl in rootFiles:
 #        if "Run2018A" in fl or "Run2018B" in fl or "Run2018C" in fl: continue
         iF = TFile.Open(fl)
-        if bool(iF) == False or iF.IsZombie():
+        if bool(iF) == False or iF.IsZombie() or iF.TestBit(TFile.kRecovered):
             print "Error in file %s, skipping."%fl
             continue
         myChain.Add(fl)
-        hTotal = iF.Get("h_total")
+        if useEventCount: hTotal = iF.Get("h_nEvent")
+        else:  hTotal = iF.Get("h_total")
         nTotalEvents += hTotal.Integral()
         iF.Close()
         if testMode: break
@@ -135,27 +139,65 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     
     if brName2D == "":
         histoModel = TH1DModel(brText+dir,brLabel,nbins,start,end)
+    else:
+        histoModel = TH2DModel(brText+dir,brLabel,nbins,start,end,nbins2,start,end)
     
+    if customJetInd != "":
+        jetind = customJetInd
+    elif "jet_" in brName and '[' in brName:
+        jetind = brName.split('[')[1].split(']')[0]
+    else:
+        jetind = "max(0.,muJet_idx)"
+
     if weightName == "":
         eventWeight = 1.
     else:
         if 'TTTo' not in dir and 'PSWeight' in weightName:
-            eventWeight = weightName.split('*')[0]
+
+            #eventWeight = '*'.join([i for i in weightName.split('*') if 'PSWeight' not in i])
+            eventWeight = weightName.replace("*PSWeightFSR_down","").replace("*PSWeightFSR_up","").replace("*PSWeightISR_down","").replace("*PSWeightISR_up","")
         else:
             eventWeight = weightName
+        if useEventCount: eventWeight = "(%s)/genWeight"%(eventWeight)
+    eventWeight = eventWeight + "*(%s)"%ptwt.replace("JETIDX",jetind)
+
+    # WJet LO reweighting
+    NLOwt = 1.
+    if "amcatnlo" not in dir:
+        if "Wc_m" in filePre or "TT_semim" in filePre:
+            if "JetsToLNu_Tune" in dir:
+                if era=="2017": NLOwt = 1.239926888
+                elif era=="2018": NLOwt = 1.68348
+        elif "Wc_e" in filePre or "TT_semie" in filePre:
+            if "JetsToLNu_Tune" in dir:
+                if era=="2017": NLOwt = 1.275986578
+                elif era=="2018": NLOwt = 1.372276
+
+        if NLOwt != 1.:
+            print "Reweighting LO WJet by factor",NLOwt
+            eventWeight = eventWeight + "*" + str(NLOwt)
+
+
     DF = DF.Define("newWeight",eventWeight)
     
     sampSels = ""
     if splitDYbyHT and "DYJetsToLL_M-50_Tune" in dir:   sampSels += " && LHE_HT < 100"
     if splitWbynJets and "WJetsToLNu_Tune" in dir:      sampSels += " && (LHE_Njets < 1 || LHE_Njets > 4)"
+    if splitWbynJetsNLO and "WJetsToLNu_Tune" in dir:      sampSels += " && LHE_Njets > 2"
+    if splitWbyVPt and ("WJetsToLNu_Tune" in dir or "WJetsToLNu_0J" in dir or "WJetsToLNu_1J" in dir or "WJetsToLNu_2J" in dir):      sampSels += " && LHE_Vpt < 100"
     
     if "Cvs" in brName:
-        newbrexp = "max(min(%s,0.999999),-0.1)"%(brName)
+        newbrexp = "max(min(%s,0.999999),-0.1) > -0.099 && max(min(%s,0.999999),-0.1) <=0 ? 1e-3 : max(min(%s,0.999999),-0.1)"%(brName,brName,brName)
         DF = DF.Define("newBr",newbrexp)
         newBr = "newBr"
+        if brName2D != "":
+            newbrexp2 = "max(min(%s,0.999999),-0.1)"%(brName2D)
+            DF = DF.Define("newBr2",newbrexp2)
+            newBr2 = "newBr2"
     else:
         DF = DF.Define("newBr",brName)
-        newBr = "newBr"        
+        newBr = "newBr"   
+        newBr2 = "newBr2"      
     
     if reWeight and divideByFlav:
         DF = DF.Define("newWeight2",
@@ -209,12 +251,7 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     
     if divideByFlav:
         myHisto = []
-        if customJetInd != "":
-            jetind = customJetInd
-        elif "jet_" in brName and '[' in brName:
-            jetind = brName.split('[')[1].split(']')[0]
-        else:
-            jetind = "max(0.,muJet_idx)"
+        
         for flav, hadflav in [('c',4),('b',5),('uds',0),('lep',0)]:
             flavSel = " && jet_hadronFlv[%s] == %d"%(jetind,hadflav)
             if flav == 'uds':
@@ -229,12 +266,20 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
                 #flavSel += " && ( (muJet_idx < 0 && jet_isHardLep[0] == 1) || (muJet_idx >= 0 && jet_isHardLep[muJet_idx] == 1) )"
 
             thisflavDF = DF.Filter(selections + sampSels + flavSel)    
-            myHisto.append( thisflavDF    \
-                            .Histo1D(   histoModel,
-                                        newBr,
-                                        "newWeight2"
-                                    )
-                            )
+            if brName2D == "":
+                myHisto.append( thisflavDF    \
+                                .Histo1D(   histoModel,
+                                            newBr,
+                                            "newWeight2"
+                                        )
+                                )
+            else:
+                myHisto.append( thisflavDF    \
+                                .Histo2D(   histoModel,
+                                            newBr, newBr2,
+                                            "newWeight2"
+                                        )
+                                )
             if getSFUnc:
                 flName = dir.split('/')[-1]
                 thisflavDF.Snapshot("Events","StackerTemp.root")
@@ -346,11 +391,18 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
                 # thisflavDF.Foreach(ROOT.fillUnc,vec)
 #            print selections + sampSels + flavSel, newBr
     else:
-        myHisto = DF.Filter(selections + sampSels)     \
-                        .Histo1D(   histoModel,
-                                    newBr,
-                                    "newWeight2"
-                                )        
+        if brName2D == "":
+            myHisto = DF.Filter(selections + sampSels)     \
+                            .Histo1D(   histoModel,
+                                        newBr,
+                                        "newWeight2"
+                                    )       
+        else:
+            myHisto = DF.Filter(selections + sampSels)     \
+                            .Histo2D(   histoModel,
+                                        newBr,newBr2,
+                                        "newWeight2"
+                                    )    
     
     
     print dir, nTotalEvents    
@@ -365,20 +417,26 @@ def makeHisto(dir,treeName,brName,brLabel,nbins,start,end,weightName="",selectio
     
     return myHisto.Clone(), nTotalEvents
 
-def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="",filePre2="",filePost="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makePNG=True,makeROOT=False,noRatio=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",SFhistSuff="",drawDataMCRatioLine=False,normTotalMC=False,binWtTxt=False,getSFUnc = False,customJetInd=""):
+def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", isLog=False, filePre="",filePre2="",filePost="", MCWeightName=MCWeightName, DataWeightName=DataWeightName, nminus1=False, doCombine=False,brName2D="",brLabel2="",nbins2=5,start2=0,end2=1, finalHistList=[], histoDList=[], drawStyle="",varBin1=[],varBin2=[],makePNG=True,makeROOT=False,noRatio=False,yTitle=yTitle,outDir=outDir,rootPath=rootPath,pathSuff="",useXSecUnc="",MCStat="",dataStat="",SFfile="",SFhistSuff="",drawDataMCRatioLine=False,normTotalMC=False,binWtTxt=False,getSFUnc = False,customJetInd="",normByPtDir=""):
     if not makePNG and not makeROOT:
         print "Neither PNG nor ROOT output was asked for. Exiting."
         sys.exit(1)
     filePre += filePre2
-    global lumi
-    if '_2018_' in rootPath:
-        era = 2018
+    global lumi,era
+    if '_2018_' in rootPath or 'UL2018' in rootPath:
+        era = "2018"
         lumi = 59960
-    elif '_2017_' in rootPath:
-        era = 2017
+    elif '_2017_' in rootPath or 'UL2017' in rootPath:
+        era = "2017"
         lumi = 41540
+    elif "UL2016Pre" in rootPath:
+        era = "UL2016Pre"
+        lumi = 19500
+    elif "UL2016Post" in rootPath:
+        era = "UL2016Post"
+        lumi = 16800
     else:
-        era = 2016
+        era = "2016"
 
     if not brName2D=="": noRatio=True
     
@@ -443,6 +501,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         
         outDir.rstrip('/')
         outDir += "_" + '_'.join(SFfile.rstrip('.root').split('_')[3:])
+        print "Updated outdir:",outDir
         print "Using c-tag SF file:", SFfile
 
         if getSFUnc:
@@ -472,14 +531,41 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         dataBinErrs = {}
         MCBinErrs = {}
 
+    if normByPtDir!="":
+        ptfile = [i for i in os.listdir(normByPtDir) if i.startswith(filePre+"_jet_Pt") and i.endswith(".root")]
+        if len(ptfile) < 1:
+            print "Did not file Pt file in ",normByPtDir
+            sys.exit(3)
+        elif len(ptfile) > 1:
+            print "WARNING: Found ambiguous matching for Pt file."
+        ptfl = TFile.Open(normByPtDir+"/"+ptfile[0],"READ")
+        ptd = ptfl.Get("Data")
+        ptm = ptfl.Get("MCSum")
+        normfact = ptd.Integral(0,ptd.GetNbinsX()+1)/ptm.Integral(0,ptm.GetNbinsX()+1)
+        ptm.Scale(normfact)
+        ptratio = ptd.Clone()
+        ptratio.Divide(ptm)
+        ptbinning, ptnorm = [], []
+        for ibin in range(1,ptratio.GetNbinsX()+2):
+            ptbinning.append(ptratio.GetXaxis().GetBinLowEdge(ibin))
+            ptnorm.append(ptratio.GetBinContent(ibin))
+        ptfl.Close()
+        lastelem = len(ptbinning)-1
+        ptwt = ""
+        for ibin in range(lastelem):
+            ptwt += "(jet_Pt[JETIDX] >= %f && jet_Pt[JETIDX] < %f) ? %f : "%(ptbinning[ibin],ptbinning[ibin+1],ptnorm[ibin])
+        ptwt += "(jet_Pt[JETIDX] >= %f) ? %f : 1"%(ptbinning[lastelem],ptnorm[lastelem])
+    else: ptwt = "1."
+
     if not outDir.endswith("/"): outDir += "/"
     os.system("mkdir -p "+outDir)
+
     # ================= Define names, locations, etc. ===================
     # colours = [kCyan,kBlue,kGreen,kRed,kOrange,kOrange-7,kMagenta,kYellow,kGray+2,kWhite]
 
-    if era == 2016: samplesDict = samplesDict2016
-    elif era == 2017: samplesDict = samplesDict2017
-    elif era == 2018: samplesDict = samplesDict2018
+    if era == "2016" or "UL2016" in era: samplesDict = samplesDict2016
+    elif era == "2017": samplesDict = samplesDict2017
+    elif era == "2018": samplesDict = samplesDict2017
 
     sampleNames = []
     AllSamplePaths = []
@@ -516,6 +602,14 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         global splitWbynJets
         splitWbynJets = True
         print "Will split WJets samples by jet multiplicity."
+    if len([i for i in samplesInDir if i.startswith("WJetsToLNu_0J")]) > 0:
+        global splitWbynJetsNLO
+        splitWbynJetsNLO = True
+        print "Will split WJets NLO samples by jet multiplicity."
+    if len([i for i in samplesInDir if i.startswith("WJetsToLNu_Pt")]) > 0:
+        global splitWbyVPt
+        splitWbyVPt = True
+        print "Will split WJets NLO samples by LHE V Pt."
     if len([i for i in samplesInDir if i.startswith("DYJetsToLL_M-50_HT-")]) > 0:
         global splitDYbyHT
         splitDYbyHT = True
@@ -523,7 +617,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
 
     colours=[]
     colourNames = [kCyan,kYellow,kMagenta,kBlue,kGreen,kRed,kGray]
-    samplesToProc = ["WJets","DYJets","ttbar","ST","VV"]
+    samplesToProc = ["WJets","DYJets","ttbar","ST"] #,"VV"]
     if "QCD" in samplesDict:
         if samplesDict["QCD"][0][0].rstrip('/') in samplesInDir:
             samplesToProc.append("QCD")
@@ -531,11 +625,19 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     for isamp, sName in enumerate(samplesToProc):
         sampleUsed = False
         for samplist in samplesDict[sName]:
-            if samplist[0].rstrip('/') not in samplesInDir: continue
+            matchlist = [s for s in samplesInDir if samplist[0].strip('/') in s and 'jer' not in s and 'jesTotal' not in s]
+            if len(matchlist) == 0:
+                print "WARNING: No match found for "+samplist[0]
+                continue
+            if len(matchlist) > 1:
+                print "WARNING: Found multiple matches %s for sample %s."%(matchlist,samplist)
+            
+            sampname = matchlist[0]
+            # if samplist[0].rstrip('/') not in samplesInDir: continue
             sampleUsed = True
             sampleNames += [sName+"(c)",sName+"(b)",sName+"(uds)",sName+"(lep)"]
 
-            AllSamplePaths.append(rootPath+samplist[0].rstrip('/'))
+            AllSamplePaths.append(rootPath+sampname.rstrip('/'))
             XSecNom = samplist[1]
 
             if sName == procName:
@@ -572,7 +674,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     sampleNamesSet = list(sorted(set(sampleNames),key=sampleNames.index))
 
     if not dataset=="":
-        if (dataset=="sele" or dataset=="deg") and era==2018:
+        if (dataset=="sele" or dataset=="deg") and era=="2018":
             datadir = EGPath2018
         elif dataset=="smu":
             datadir = sMuPath
@@ -593,7 +695,7 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     c.SetCanvasSize(1200,1200)
 #    c.SetWindowSize(1200,1200)
 
-    print "Using era: %d, Lumi: %d"%(era,lumi)
+    print "Using era: %s, Lumi: %d"%(era,lumi)
 
     # ======================= Selection info =========================
     if nminus1:
@@ -650,7 +752,11 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
         for dir in AllSamplePaths:
             flName = dir.split('/')[-1]
             print "Starting with "+dir
-            histo, nTot = makeHisto(dir,"Events",brName,brLabel,nbins,start,end,weightName=MCWeightName,divideByFlav=True,selections=selections,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),getSFUnc=getSFUnc,customJetInd=customJetInd)
+            evCount = False
+            if "amcatnlo" not in dir and (era=="2017" or "UL2016" in era):
+                print "Skipping genWeights for",dir
+                evCount = True
+            histo, nTot = makeHisto(dir,"Events",brName,brLabel,nbins,start,end,weightName=MCWeightName,divideByFlav=True,selections=selections,brName2D=brName2D,nbins2=nbins2,start2=start2,end2=end2,varBin1=array('d',varBin1),varBin2=array('d',varBin2),getSFUnc=getSFUnc,customJetInd=customJetInd,useEventCount=evCount,ptwt=ptwt,filePre=filePre)
             for idx in range(4):
                 allHists.append(histo[idx].Clone())
                 integrals.append(nTot)
@@ -740,10 +846,14 @@ def plotStack(brName,brLabel,nbins,start,end,selections="",cuts=[], dataset="", 
     legend.SetTextSize(0.02)
     legend.SetNColumns(4)
 
+    totalMC = 0
+    for ind, iName in enumerate(sampleNamesSet):
+        totalMC += finalHists[iName].Integral()
+    if totalMC==0: totalMC=1
     for ind, iName in enumerate(sampleNamesSet):
         finalHists[iName].SetFillColor(colours[ind])
         legend.AddEntry(finalHists[iName],iName,"f")
-        print iName,":", finalHists[iName].Integral()
+        print iName,":", finalHists[iName].Integral(), ":",finalHists[iName].Integral()*100/totalMC,"%"
 
     # ================= Make stack histogram ===================
     myStack = THStack("myStack","")

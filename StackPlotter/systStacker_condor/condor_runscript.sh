@@ -1,4 +1,4 @@
-	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_210225_MuBiasTestSemiTcEnrNoBTagger/
+	OUTPUTDIR=/nfs/dust/cms/user/spmondal/ctag_condor/systPlots/Plots_221013_thesis2018valid/
 	OUTPUTNAME=output_2017
 
 	CONDOR_CLUSTER_ID=$1
@@ -18,7 +18,7 @@
 
         echo "setting up the environment"
         cd /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_11_1_0_p3_ROOT618/src/
-        source /cvmfs/cms.cern.ch/cmsset_default.sh
+        source /afs/desy.de/user/s/spmondal/private/ctag/VHcc-cTagSF/Analyzer/condorDESY/cmsset_default.sh #source /cvmfs/cms.cern.ch/cmsset_default.sh
         eval `scramv1 runtime -sh`
         echo "echo PATH:"
         echo $PATH
@@ -28,7 +28,7 @@
         cd $tmp_dir
         pwd
         ls
-	
+        ulimit -s unlimited	
     	echo "running python script"
         python -c $'import Stacker; f=open("cmdList.txt","r"); ln=f.readlines(); thisline=ln['$2$'];\nfor cmd in thisline.split("NEWLINE"): exec(cmd)'
        	rc=$?
@@ -41,7 +41,7 @@
 
         echo "copying output"
         mkdir -p ${OUTPUTDIR}
-	    until cp -vr ${OUTPUTNAME}* ${OUTPUTDIR}; do
+	until cp -vr ${OUTPUTNAME}* ${OUTPUTDIR}; do
 		    echo "copying output failed. Retrying..."
 		    sleep 60		
     	done

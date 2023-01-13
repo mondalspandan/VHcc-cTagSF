@@ -1,0 +1,17 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_10.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_11.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_12.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_13.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_14.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_15.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_4.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_5.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_6.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_7.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_8.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR112/181118_100320/0000/tree_9.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR113/181118_100344/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ZJetsToNuNu_HT-400To600_13TeV-madgraph/arizzi-RunIIMoriond17-DeepAndR113/181118_100344/0000/tree_2.root

@@ -17,6 +17,7 @@ with open("toResubmit.txt","w") as fl:
     ln=f.readlines()
     for failed in failednums:
         fullline = ln[int(failed)].strip()
-        for each in fullline.split("NEWLINE"):
-            fl.write(each.strip("NEWLINE")+"\n")
+#        for each in fullline.split("NEWLINE"):
+#            fl.write(each.strip("NEWLINE")+"\n")
+        fl.write(fullline+"\n")
         os.system("mv condor/*.%s.log condor/oldlogs"%failed)

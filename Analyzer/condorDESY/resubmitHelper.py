@@ -1,5 +1,6 @@
 import os, subprocess, sys
-condordir="condor/"
+condordir="/nfs/dust/cms/user/spmondal/condor_logs/"
+#condordir="condor"
 if len(sys.argv) > 1: condid=sys.argv[1]+"*"
 else: condid = ""
 
@@ -27,6 +28,7 @@ os.system("mv cmdList.txt cmdList_old.txt")
 with open("cmdList.txt","w") as fl:
     f=open('cmdList_old.txt','r')
     ln=f.readlines()
+    mvcmd = ""
     for failed in failednums:
         if not split:
             fl.write(ln[int(failed)])
@@ -34,7 +36,8 @@ with open("cmdList.txt","w") as fl:
             for ijec in range(5):
                 fl.write(ln[int(failed)].strip()+" "+str(ijec)+'\n')
                 if "Single" in ln[int(failed)] or "Double" in ln[int(failed)] or "EGamma" in ln[int(failed)] or "MuonEG" in ln[int(failed)]: break
-        os.system("mv %s/*%s.%s.log %s/oldlogs"%(condordir,condid,failed,condordir))
+        mvcmd += " %s/*%s.%s.log"%(condordir,condid,failed)
+    os.system("mv %s %s/oldlogs/"%(mvcmd,condordir))
 
 if split:
     print "Resubmit with `condor_submit submit_split.sub`."

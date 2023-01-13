@@ -6,3 +6,4 @@ for line in inf:
     out.write(line.strip())
     if count%5 == 0: out.write('\n')
     else: out.write('NEWLINE')
+

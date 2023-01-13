@@ -1,0 +1,31 @@
+universe = vanilla
+Executable = condor_runscript_Wc_NoJEC.sh
+Output = condor/log-$(ClusterId).$(ProcId).out
+Error  = condor/log-$(ClusterId).$(ProcId).err
+Log    = condor/log-$(ClusterId).$(ProcId).log
+
+arguments    = $(ClusterId) $(ProcId) $(INFILE)
+
+Notification = never
+on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+queue INFILE from toResubmit.txt

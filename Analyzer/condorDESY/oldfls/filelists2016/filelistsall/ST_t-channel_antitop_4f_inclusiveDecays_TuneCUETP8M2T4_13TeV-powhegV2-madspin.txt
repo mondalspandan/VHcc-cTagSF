@@ -1,0 +1,5 @@
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_t-channel_antitop_4f_inclusiveDecays_TuneCUETP8M2T4_13TeV-powhegV2-madspin/arizzi-RunIIMoriond17-DeepAndR144/181118_101629/0000/tree_1.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_t-channel_antitop_4f_inclusiveDecays_TuneCUETP8M2T4_13TeV-powhegV2-madspin/arizzi-RunIIMoriond17-DeepAndR144/181118_101629/0000/tree_2.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_t-channel_antitop_4f_inclusiveDecays_TuneCUETP8M2T4_13TeV-powhegV2-madspin/arizzi-RunIIMoriond17-DeepAndR144/181118_101629/0000/tree_3.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_t-channel_antitop_4f_inclusiveDecays_TuneCUETP8M2T4_13TeV-powhegV2-madspin/arizzi-RunIIMoriond17-DeepAndR144/181118_101629/0000/tree_4.root
+/store/user/lmastrol/VHcc_2016V4bis_Nov18/ST_t-channel_antitop_4f_inclusiveDecays_TuneCUETP8M2T4_13TeV-powhegV2-madspin/arizzi-RunIIMoriond17-DeepAndR144/181118_101629/0000/tree_5.root

@@ -1,0 +1,6 @@
+/pnfs/desy.de/cms/tier2/store/user/andrey/VHccPostProcV15_NanoV7/2017/WWTo4Q_NNPDF31_TuneCP5_13TeV-powheg-pythia8/PostProc_V15_Mar2021_andrey-Na_104/210327_225051/0000/tree_1.root
+/pnfs/desy.de/cms/tier2/store/user/andrey/VHccPostProcV15_NanoV7/2017/WWTo4Q_NNPDF31_TuneCP5_13TeV-powheg-pythia8/PostProc_V15_Mar2021_andrey-Na_104/210327_225051/0000/tree_2.root
+/pnfs/desy.de/cms/tier2/store/user/andrey/VHccPostProcV15_NanoV7/2017/WWTo4Q_NNPDF31_TuneCP5_13TeV-powheg-pythia8/PostProc_V15_Mar2021_andrey-Na_104/210327_225051/0000/tree_3.root
+/pnfs/desy.de/cms/tier2/store/user/andrey/VHccPostProcV15_NanoV7/2017/WWTo4Q_NNPDF31_TuneCP5_13TeV-powheg-pythia8/PostProc_V15_Mar2021_andrey-Na_104/210327_225051/0000/tree_4.root
+/pnfs/desy.de/cms/tier2/store/user/andrey/VHccPostProcV15_NanoV7/2017/WWTo4Q_NNPDF31_TuneCP5_13TeV-powheg-pythia8/PostProc_V15_Mar2021_andrey-Na_104/210327_225051/0000/tree_5.root
+/pnfs/desy.de/cms/tier2/store/user/andrey/VHccPostProcV15_NanoV7/2017/WWTo4Q_NNPDF31_TuneCP5_13TeV-powheg-pythia8/PostProc_V15_Mar2021_andrey-Na_104/210327_225051/0000/tree_6.root

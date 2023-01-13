@@ -1,0 +1,49 @@
+universe = vanilla
+Executable = condor_runscript_Wc_NoJEC.sh
+Output = condor/log-$(ClusterId).$(ProcId).out
+Error  = condor/log-$(ClusterId).$(ProcId).err
+Log    = condor/log-$(ClusterId).$(ProcId).log
+
+arguments    = $(ClusterId) $(ProcId) $(INFILE)
+
+Notification = never
+on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
+
+
+queue INFILE from filelists2017/inputs_Wc/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/SingleElectron.txt
+
+queue INFILE from filelists2017/inputs_Wc/SingleMuon.txt
+
+queue INFILE from filelists2017/inputs_Wc/TTTo2L2Nu_TuneCP5_PSweights_13TeV-powheg-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/TTToHadronic_TuneCP5_PSweights_13TeV-powheg-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/W2JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/W3JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/WW_TuneCP5_13TeV-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/WZ_TuneCP5_13TeV-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/ZZ_TuneCP5_13TeV-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/ST_s-channel_4f_leptonDecays_TuneCP5_PSweights_13TeV-amcatnlo-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/ST_t-channel_antitop_4f_inclusiveDecays_TuneCP5_13TeV-powhegV2-madspin-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/ST_t-channel_top_4f_inclusiveDecays_TuneCP5_13TeV-powhegV2-madspin-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.txt
+
+queue INFILE from filelists2017/inputs_Wc/ST_tW_top_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8.txt

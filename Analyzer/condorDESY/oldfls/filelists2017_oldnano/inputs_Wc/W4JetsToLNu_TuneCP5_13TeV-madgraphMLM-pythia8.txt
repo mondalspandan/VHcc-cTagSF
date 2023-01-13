@@ -1,0 +1,11 @@
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_1.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_10.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_11.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_2.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_3.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_4.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_5.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_6.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_7.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_8.root
+/pnfs/desy.de/cms/tier2/store/user/spmondal/VHcc_2017V5_May19/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAOD-PU2017_12Ap4/190502_151653/0000/tree_9.root
